@@ -28,11 +28,12 @@
     <string name="edit_cancel">Отмена</string>
     <string name="back">Назад</string>
     <string name="ok">Понятно</string>
-    <string name="setup_instructions_text">1. Установите Termux с F-Droid или GitHub (не из Play Store).
-2. В Termux: pkg install nodejs, затем npm i -g @anthropic-ai/claude-code.
-3. Запустите claude и войдите под своей подпиской.
-4. Положите скрипт termux/classify.sh из репозитория в ~/.tabguard/classify.sh и выполните chmod +x.
-5. Добавьте allow-external-apps=true в ~/.termux/termux.properties и выполните termux-reload-settings.
-6. В настройках Android выдайте «Стражу вкладок» разрешение «Run commands in Termux environment».
-7. Нажмите «Проверить связь».</string>
+    <string name="setup_instructions_text">1. Установите Termux с F-Droid (не из Play Store).
+2. В Termux: pkg upgrade -y, затем pkg install -y proot-distro и proot-distro install ubuntu.
+3. proot-distro login ubuntu, затем apt update, apt install -y curl и curl -fsSL https://claude.ai/install.sh | bash.
+4. Запустите ~/.local/bin/claude, войдите под своей подпиской, затем /exit и exit.
+5. Создайте ~/.tabguard/classify.sh из termux/classify.sh в репозитории и выполните chmod +x.
+6. Добавьте allow-external-apps=true в ~/.termux/termux.properties и выполните termux-reload-settings.
+7. В настройках Android выдайте «Стражу вкладок» разрешение «Run commands in Termux environment».
+8. Нажмите «Проверить связь».</string>
 </resources>

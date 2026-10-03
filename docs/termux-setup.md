@@ -8,21 +8,30 @@
 Установите Termux **с F-Droid или со страницы релизов на GitHub** (termux/termux-app).
 Версия из Play Store устарела и не поддерживает нужный интент.
 
-## 2. Claude Code
+## 2. Claude Code (внутри Ubuntu)
+
+Готовой сборки Claude Code под Android нет, поэтому он запускается в Ubuntu внутри Termux.
 
 ```bash
-pkg update && pkg install nodejs
-npm i -g @anthropic-ai/claude-code
-claude          # войти под аккаунтом с подпиской Pro, затем выйти (/exit)
+pkg upgrade -y                      # на вопросы о файлах конфигурации отвечать y
+pkg install -y proot-distro
+proot-distro install ubuntu
+proot-distro login ubuntu
+# теперь внутри Ubuntu (root@localhost):
+apt update && apt install -y curl
+curl -fsSL https://claude.ai/install.sh | bash   # при обрывах: уведомление Termux → Acquire wakelock
+~/.local/bin/claude --version
+~/.local/bin/claude                 # войти под аккаунтом с подпиской Pro, затем /exit
+exit                                # обратно в Termux
 ```
 
 ## 3. Скрипт-обёртка
 
-Скопируйте `termux/classify.sh` из репозитория в Termux:
-
 ```bash
-mkdir -p ~/.tabguard
-# вставьте содержимое classify.sh, например: nano ~/.tabguard/classify.sh
+mkdir -p ~/.tabguard && cat > ~/.tabguard/classify.sh <<'SH'
+#!/data/data/com.termux/files/usr/bin/bash
+exec timeout 25 proot-distro login ubuntu -- /root/.local/bin/claude -p --model haiku "$1"
+SH
 chmod +x ~/.tabguard/classify.sh
 ```
 
