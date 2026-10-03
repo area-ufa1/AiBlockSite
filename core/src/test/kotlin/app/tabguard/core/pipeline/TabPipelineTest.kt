@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class TabPipelineTest {
     private val cats = listOf(Category(1, "c", true, emptyList(), emptySet()))
     private val classified = mutableListOf<String?>()
