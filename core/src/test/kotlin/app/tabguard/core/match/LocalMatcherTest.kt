@@ -76,4 +76,12 @@ class LocalMatcherTest {
     @Test
     fun `ordinary page is not allowlisted`() =
         assertTrue(!LocalMatcher.isAllowlisted(TabSnapshot("b", "notclaude.ai.evil.com", null)))
+
+    @Test
+    fun `large domain set matches quickly`() {
+        val big = Category(3, "big", true, emptyList(), (0 until 100_000).map { "site$it.com" }.toSet() + "pornhub.com")
+        val start = System.nanoTime()
+        repeat(1000) { assertNotNull(LocalMatcher.match(TabSnapshot("b", "rt.pornhub.com/v", "x"), listOf(big))) }
+        assertTrue((System.nanoTime() - start) < 1_000_000_000L)
+    }
 }

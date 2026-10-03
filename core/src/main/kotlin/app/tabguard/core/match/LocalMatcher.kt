@@ -7,7 +7,7 @@ import app.tabguard.core.model.VerdictSource
 import app.tabguard.core.text.extractHost
 import app.tabguard.core.text.tokenize
 
-/** On-device matching by category domains and keywords. */
+/** On-device matching by category domains and keywords. [Category.domains] must hold normalized hosts. */
 object LocalMatcher {
     val ALLOWED_HOSTS = setOf("claude.ai", "anthropic.com")
     const val OWN_PACKAGE = "app.tabguard"
@@ -22,7 +22,8 @@ object LocalMatcher {
         val enabled = categories.filter { it.enabled }
         val host = tab.url?.let(::extractHost)
         if (host != null) {
-            enabled.firstOrNull { c -> c.domains.any { d -> extractHost(d)?.let { host.isWithin(it) } == true } }
+            val suffixes = host.suffixes()
+            enabled.firstOrNull { c -> suffixes.any(c.domains::contains) }
                 ?.let { return Verdict.Block(it.id, VerdictSource.DOMAIN) }
         }
         val texts = listOfNotNull(tab.title, tab.url).map(::tokenize)
@@ -31,6 +32,10 @@ object LocalMatcher {
         }?.let { return Verdict.Block(it.id, VerdictSource.KEYWORD) }
         return null
     }
+
+    /** "a.b.com" → ["a.b.com", "b.com", "com"]. */
+    private fun String.suffixes(): List<String> =
+        indices.filter { it == 0 || this[it - 1] == '.' }.map { substring(it) }
 
     private fun String.isWithin(domain: String) = this == domain || endsWith(".$domain")
 
