@@ -53,7 +53,7 @@ class TermuxClaudeClassifierTest {
         assertEquals(1, args.size)
         assertTrue(args[0].contains("3: Порно") && args[0].contains("Заголовок: Видео"))
         assertTrue(i.getBooleanExtra("com.termux.RUN_COMMAND_BACKGROUND", false))
-        assertNotNull(i.getParcelableExtra<android.app.PendingIntent>("com.termux.RUN_COMMAND_PENDING_INTENT"))
+        assertNotNull(i.extras?.get("com.termux.RUN_COMMAND_PENDING_INTENT") as? android.app.PendingIntent)
     }
 
     @Test

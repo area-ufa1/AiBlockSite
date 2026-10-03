@@ -21,11 +21,64 @@ import java.util.concurrent.atomic.AtomicInteger
 class TermuxClaudeClassifier(
     private val context: Context,
     private val timeoutMs: Long = 30_000,
-    private val sender: (Intent) -> Unit = { context.startService(it) },
+    private val sender: (Intent) -> Unit = { intent ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
+    },
 ) : Classifier {
-    fun isTermuxInstalled(): Boolean = TODO()
-    override suspend fun classify(tab: TabSnapshot, categories: List<Category>): Verdict = TODO()
-    fun deliver(requestId: Int, result: Bundle): Unit = TODO()
+    private val pending = ConcurrentHashMap<Int, CompletableDeferred<Bundle>>()
+    private val nextId = AtomicInteger()
+
+    fun isTermuxInstalled(): Boolean = try {
+        context.packageManager.getPackageInfo(TERMUX_PACKAGE, 0)
+        true
+    } catch (e: PackageManager.NameNotFoundException) {
+        false
+    }
+
+    override suspend fun classify(tab: TabSnapshot, categories: List<Category>): Verdict {
+        val id = nextId.incrementAndGet()
+        val reply = CompletableDeferred<Bundle>()
+        pending[id] = reply
+        try {
+            try {
+                sender(runCommandIntent(id, ClassificationPrompt.build(tab, categories)))
+            } catch (e: Exception) {
+                return Verdict.Unknown("termux: ${e.message ?: e.javaClass.simpleName}")
+            }
+            val result = withTimeoutOrNull(timeoutMs) { reply.await() } ?: return Verdict.Unknown("timeout")
+            return interpret(result, categories.map { it.id }.toSet())
+        } finally {
+            pending.remove(id)
+        }
+    }
+
+    /** Called by [TermuxResultReceiver] with Termux's result bundle. */
+    fun deliver(requestId: Int, result: Bundle) {
+        pending[requestId]?.complete(result)
+    }
+
+    private fun interpret(result: Bundle, ids: Set<Long>): Verdict {
+        val err = result.getInt(RESULT_ERR, ERR_SUCCESS)
+        val exitCode = result.getInt(RESULT_EXIT_CODE, 0)
+        if (err != ERR_SUCCESS || exitCode != 0) {
+            val message = result.getString(RESULT_ERRMSG)?.takeIf { it.isNotBlank() }
+                ?: result.getString(RESULT_STDERR)?.takeIf { it.isNotBlank() }
+                ?: "exit code $exitCode"
+            return Verdict.Unknown("termux: ${message.trim().take(200)}")
+        }
+        return ClassificationPrompt.parse(result.getString(RESULT_STDOUT).orEmpty(), ids)
+    }
+
+    private fun runCommandIntent(requestId: Int, prompt: String): Intent {
+        val callback = Intent(context, TermuxResultReceiver::class.java).putExtra(EXTRA_REQUEST_ID, requestId)
+        val flags = PendingIntent.FLAG_ONE_SHOT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0)
+        return Intent(ACTION_RUN_COMMAND)
+            .setComponent(ComponentName(TERMUX_PACKAGE, RUN_COMMAND_SERVICE))
+            .putExtra(EXTRA_COMMAND_PATH, SCRIPT_PATH)
+            .putExtra(EXTRA_ARGUMENTS, arrayOf(prompt))
+            .putExtra(EXTRA_BACKGROUND, true)
+            .putExtra(EXTRA_PENDING_INTENT, PendingIntent.getBroadcast(context, requestId, callback, flags))
+    }
 
     companion object {
         const val TERMUX_PACKAGE = "com.termux"
