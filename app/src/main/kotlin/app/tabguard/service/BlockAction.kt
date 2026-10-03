@@ -23,5 +23,21 @@ class BlockAction(
     private val clock: () -> Long = System::currentTimeMillis,
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) {
-    suspend fun perform(tab: TabSnapshot, block: Verdict.Block): Unit = TODO()
+    suspend fun perform(tab: TabSnapshot, block: Verdict.Block) {
+        val category = repository.get(block.categoryId) ?: return
+        repository.recordBlock(category.id, block.source, clock())
+        val prompt = SupportPrompt.build(tab, category.name)
+        withContext(mainDispatcher) {
+            val clipboard = context.getSystemService(ClipboardManager::class.java)
+            clipboard?.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), prompt))
+            val open = Intent(Intent.ACTION_VIEW, Uri.parse(SupportPrompt.claudeUrl(prompt)))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                context.startActivity(open)
+            } catch (e: ActivityNotFoundException) {
+                // No browser to open claude.ai; the prompt is still on the clipboard.
+            }
+            Toast.makeText(context, R.string.toast_redirect, Toast.LENGTH_LONG).show()
+        }
+    }
 }
