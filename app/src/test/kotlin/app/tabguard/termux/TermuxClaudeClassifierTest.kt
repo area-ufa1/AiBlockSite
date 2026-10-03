@@ -1,5 +1,6 @@
 package app.tabguard.termux
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
@@ -16,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class TermuxClaudeClassifierTest {
@@ -37,7 +39,8 @@ class TermuxClaudeClassifierTest {
         val c = classifier()
         val job = async { c.classify(tab, cats) }
         while (sent.isEmpty()) yield()
-        c.deliver(sent.single().getIntExtra(TermuxClaudeClassifier.EXTRA_REQUEST_ID, -1), bundle)
+        val callback = sent.single().extras!!.get(TermuxClaudeClassifier.EXTRA_PENDING_INTENT) as PendingIntent
+        c.deliver(shadowOf(callback).savedIntent.getIntExtra(TermuxClaudeClassifier.EXTRA_REQUEST_ID, -1), bundle)
         job.await()
     }
 
