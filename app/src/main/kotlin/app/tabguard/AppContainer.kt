@@ -14,7 +14,8 @@ import kotlinx.coroutines.SupervisorJob
 class AppContainer(app: Application) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val db = AppDatabase.build(app)
-    val repository = CategoryRepository(db, BundledLists(app.assets))
+    val lists = BundledLists(app.assets)
+    val repository = CategoryRepository(db, lists)
     val settings = SettingsStore(app)
     val termux = TermuxClaudeClassifier(app)
 }

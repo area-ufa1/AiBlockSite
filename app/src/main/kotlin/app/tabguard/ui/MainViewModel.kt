@@ -31,11 +31,62 @@ class MainViewModel(
     private val isServiceEnabled: () -> Boolean,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
-    val state: StateFlow<MainState> = MutableStateFlow(MainState())
-    fun refresh(): Unit = TODO()
-    fun toggleCategory(id: Long, enabled: Boolean): Unit = TODO()
-    fun saveCategory(id: Long?, name: String, keywords: String, domains: String): Unit = TODO()
-    fun deleteCategory(id: Long): Unit = TODO()
-    fun setClaudeEnabled(v: Boolean): Unit = TODO()
-    fun testClaude(): Unit = TODO()
+    private val serviceEnabled = MutableStateFlow(isServiceEnabled())
+    private val termuxInstalled = MutableStateFlow(termux.isTermuxInstalled())
+    private val testStatus = MutableStateFlow<String?>(null)
+
+    val state: StateFlow<MainState> = combine(
+        repo.observeWithCounts(),
+        settings.claudeEnabled,
+        settings.lastClaudeError,
+        combine(serviceEnabled, termuxInstalled, ::Pair),
+        testStatus,
+    ) { categories, claudeEnabled, lastError, (service, installed), status ->
+        MainState(
+            categories = categories,
+            serviceEnabled = service,
+            termuxInstalled = installed,
+            claudeEnabled = claudeEnabled && installed,
+            claudeStatus = status ?: lastError?.let { "Последняя ошибка: $it" },
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MainState())
+
+    /** Re-checks things the user may have changed in system settings. */
+    fun refresh() {
+        serviceEnabled.value = isServiceEnabled()
+        termuxInstalled.value = termux.isTermuxInstalled()
+    }
+
+    fun toggleCategory(id: Long, enabled: Boolean) {
+        viewModelScope.launch { repo.setEnabled(id, enabled) }
+    }
+
+    fun saveCategory(id: Long?, name: String, keywords: String, domains: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch { repo.save(id, name, keywords, domains) }
+    }
+
+    fun deleteCategory(id: Long) {
+        viewModelScope.launch { repo.delete(id) }
+    }
+
+    fun setClaudeEnabled(v: Boolean) {
+        if (v && !termux.isTermuxInstalled()) return
+        viewModelScope.launch { settings.setClaudeEnabled(v) }
+    }
+
+    fun testClaude() {
+        viewModelScope.launch {
+            testStatus.value = "Проверяю…"
+            val categories = repo.enabledCategories().ifEmpty { listOf(Category(1, "Тест", true, listOf("тест"), emptySet())) }
+            val start = clock()
+            val verdict = termux.classify(TabSnapshot("test", "example.com", "Пример"), categories)
+            val seconds = (clock() - start) / 1000.0
+            testStatus.value = when (verdict) {
+                is Verdict.Unknown -> "Ошибка: ${verdict.reason}"
+                else -> "OK, ответ за %.1f с".format(seconds)
+            }
+            if (verdict !is Verdict.Unknown) settings.setLastClaudeError(null)
+        }
+    }
 }
