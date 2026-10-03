@@ -30,7 +30,7 @@ exit                                # обратно в Termux
 ```bash
 mkdir -p ~/.tabguard && cat > ~/.tabguard/classify.sh <<'SH'
 #!/data/data/com.termux/files/usr/bin/bash
-exec timeout 25 proot-distro login ubuntu -- /root/.local/bin/claude -p --model haiku "$1"
+exec timeout 85 proot-distro login ubuntu -- /root/.local/bin/claude -p --model haiku "$1"
 SH
 chmod +x ~/.tabguard/classify.sh
 ```

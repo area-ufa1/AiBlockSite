@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Classifies a tab by running `claude -p` in Termux via its RUN_COMMAND intent. */
 class TermuxClaudeClassifier(
     private val context: Context,
-    private val timeoutMs: Long = 30_000,
+    private val timeoutMs: Long = 90_000,
     private val sender: (Intent) -> Unit = { intent ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
     },
