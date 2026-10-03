@@ -79,4 +79,11 @@ class TabExtractorTest {
         assertNotNull(tab)
         assertTrue((System.nanoTime() - start) < 1_000_000_000L)
     }
+
+    @Test
+    fun `page content inside WebView is not searched`() {
+        val form = FakeNode(className = "android.widget.EditText", text = "user@mail.example.org")
+        val root = FakeNode(children = listOf(FakeNode(className = "android.webkit.WebView", text = "Login", children = listOf(form))))
+        assertNull(TabExtractor.extract("some.browser", root))
+    }
 }

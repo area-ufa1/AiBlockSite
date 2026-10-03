@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -27,6 +28,7 @@ class TabPipelineTest {
             categories = { cats },
             onBlock = { tab, _ -> blocked += tab.title },
             onUnknown = { unknown += it },
+            now = { currentTime },
         )
 
     private fun tab(t: String) = TabSnapshot("b", "$t.com", t)
@@ -71,6 +73,31 @@ class TabPipelineTest {
         val p = pipeline { if (it.title == "A") Verdict.Unknown("timeout") else Verdict.Block(1, VerdictSource.CLAUDE) }
         p.submit(tab("A")); advanceTimeBy(600); p.submit(tab("B")); advanceTimeBy(600)
         assertEquals(listOf("timeout"), unknown)
+        assertEquals(listOf("B"), blocked)
+    }
+
+    @Test
+    fun `going back to a blocked page blocks it again`() = runTest {
+        val p = pipeline { Verdict.Block(1, VerdictSource.KEYWORD) }
+        p.submit(tab("A")); advanceTimeBy(600)
+        advanceTimeBy(5_000)
+        p.submit(tab("A")); advanceTimeBy(600)
+        assertEquals(listOf("A", "A"), blocked)
+    }
+
+    @Test
+    fun `repeated events right after a block do not redirect twice`() = runTest {
+        val p = pipeline { Verdict.Block(1, VerdictSource.KEYWORD) }
+        p.submit(tab("A")); advanceTimeBy(600)
+        p.submit(tab("A")); advanceTimeBy(600)
+        assertEquals(listOf("A"), blocked)
+    }
+
+    @Test
+    fun `exception in classification does not stop the pipeline`() = runTest {
+        val p = pipeline { if (it.title == "A") throw IllegalStateException("db closed") else Verdict.Block(1, VerdictSource.KEYWORD) }
+        p.submit(tab("A")); advanceTimeBy(600); p.submit(tab("B")); advanceTimeBy(600)
+        assertEquals(listOf("error: db closed"), unknown)
         assertEquals(listOf("B"), blocked)
     }
 }

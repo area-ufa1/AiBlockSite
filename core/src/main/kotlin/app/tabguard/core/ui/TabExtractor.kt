@@ -34,7 +34,8 @@ object TabExtractor {
                 title = node.text?.takeIf { it.isNotBlank() } ?: node.contentDescription?.takeIf { it.isNotBlank() }
             }
             if (urlBar != null && title != null) break
-            if (depth < MAX_DEPTH) node.children.forEach { queue.addLast(it to depth + 1) }
+            // Page content lives under the WebView: never search it (cost, and form fields look like URLs).
+            if (depth < MAX_DEPTH && node.className != WEB_VIEW) node.children.forEach { queue.addLast(it to depth + 1) }
         }
 
         val url = urlBar ?: urlLikeEdit ?: return null

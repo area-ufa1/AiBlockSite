@@ -4,7 +4,11 @@ import app.tabguard.core.model.Category
 import app.tabguard.core.model.TabSnapshot
 import app.tabguard.core.model.Verdict
 import app.tabguard.core.model.VerdictSource
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.IOException
@@ -69,5 +73,32 @@ class ClassifierChainTest {
         val a = TabSnapshot("b", "a.com", "A")
         chain.classify(a, listOf(cat)); chain.classify(a, listOf(cat))
         assertEquals(2, calls)
+    }
+
+    @Test
+    fun `blank title skips remote`() = runTest {
+        val chain = ClassifierChain({ remote(Verdict.Block(1, VerdictSource.CLAUDE)) })
+        assertEquals(Verdict.Allow, chain.classify(TabSnapshot("b", "x.com", null), listOf(cat)))
+        assertEquals(Verdict.Allow, chain.classify(TabSnapshot("b", "x.com", "  "), listOf(cat)))
+        assertEquals(0, calls)
+    }
+
+    @Test
+    fun `remote calls run one at a time and stale waiting ones are dropped`() = runTest {
+        var running = 0
+        var maxRunning = 0
+        val seen = mutableListOf<String?>()
+        val chain = ClassifierChain({
+            Classifier { tab, _ ->
+                running++; maxRunning = maxOf(maxRunning, running); seen += tab.title
+                delay(1_000); running--; Verdict.Allow
+            }
+        })
+        val jobs = listOf("A", "B", "C").map { t ->
+            launch { chain.classify(TabSnapshot("b", "$t.com", t), listOf(cat)) }.also { yield() }
+        }
+        jobs.joinAll()
+        assertEquals(1, maxRunning)
+        assertEquals(listOf("A", "C"), seen)
     }
 }
