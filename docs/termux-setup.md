@@ -30,7 +30,9 @@ exit                                # обратно в Termux
 ```bash
 mkdir -p ~/.tabguard && cat > ~/.tabguard/classify.sh <<'SH'
 #!/data/data/com.termux/files/usr/bin/bash
-exec timeout 85 proot-distro login ubuntu -- /root/.local/bin/claude -p --model haiku "$1"
+exec timeout 85 proot-distro login ubuntu -- env DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
+  /root/.local/bin/claude -p --model haiku --tools "" \
+  --system-prompt "Ты классификатор. Отвечай только числом." "$1"
 SH
 chmod +x ~/.tabguard/classify.sh
 ```
