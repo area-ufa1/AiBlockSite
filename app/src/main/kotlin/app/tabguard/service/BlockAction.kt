@@ -16,18 +16,24 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Counts the block, puts the supportive prompt on the clipboard and opens claude.ai with it. */
+/**
+ * Counts the block, leaves the page (system Back), puts the supportive prompt on the clipboard
+ * and opens claude.ai with it. Back comes first: even if the firmware blocks opening claude.ai
+ * from the background, the user is no longer on the page.
+ */
 class BlockAction(
     private val context: Context,
     private val repository: CategoryRepository,
     private val clock: () -> Long = System::currentTimeMillis,
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val goBack: () -> Unit = {},
 ) {
     suspend fun perform(tab: TabSnapshot, block: Verdict.Block) {
         val category = repository.get(block.categoryId) ?: return
         repository.recordBlock(category.id, block.source, clock())
         val prompt = SupportPrompt.build(tab, category.name)
         withContext(mainDispatcher) {
+            goBack()
             val clipboard = context.getSystemService(ClipboardManager::class.java)
             clipboard?.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), prompt))
             val open = Intent(Intent.ACTION_VIEW, Uri.parse(SupportPrompt.claudeUrl(prompt)))

@@ -29,12 +29,13 @@ class BlockActionTest {
     private lateinit var db: AppDatabase
     private lateinit var repo: CategoryRepository
     private lateinit var action: BlockAction
+    private val events = mutableListOf<String>()
 
     @Before
     fun setUp() {
         db = AppDatabase.build(app, inMemory = true)
         repo = CategoryRepository(db, BundledLists { "".byteInputStream() })
-        action = BlockAction(app, repo, clock = { 42L }, mainDispatcher = Dispatchers.Unconfined)
+        action = BlockAction(app, repo, clock = { 42L }, mainDispatcher = Dispatchers.Unconfined, goBack = { events += "back" })
     }
 
     @After
@@ -59,5 +60,19 @@ class BlockActionTest {
         action.perform(TabSnapshot("b", "x.com", "t"), Verdict.Block(999, VerdictSource.CLAUDE))
         assertNull(shadowOf(app).nextStartedActivity)
         assertEquals(0, db.events().count())
+    }
+
+    @Test
+    fun `perform presses back before opening claude`() = runBlocking {
+        val id = repo.observeWithCounts().first().single().category.id
+        action.perform(TabSnapshot("b", "x.com", "t"), Verdict.Block(id, VerdictSource.DOMAIN))
+        assertEquals(listOf("back"), events)
+        assertTrue(shadowOf(app).nextStartedActivity != null)
+    }
+
+    @Test
+    fun `deleted category does not press back`() = runBlocking {
+        action.perform(TabSnapshot("b", "x.com", "t"), Verdict.Block(999, VerdictSource.DOMAIN))
+        assertEquals(emptyList<String>(), events)
     }
 }

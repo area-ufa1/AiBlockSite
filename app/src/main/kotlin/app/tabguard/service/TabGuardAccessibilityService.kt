@@ -31,7 +31,7 @@ class TabGuardAccessibilityService : AccessibilityService() {
         val c = container
         browsers = queryBrowsers()
         val claudeEnabled = c.settings.claudeEnabled.stateIn(scope, SharingStarted.Eagerly, false)
-        val action = BlockAction(this, c.repository)
+        val action = BlockAction(this, c.repository, goBack = { performGlobalAction(GLOBAL_ACTION_BACK) })
         pipeline = TabPipeline(
             scope = scope,
             classifier = ClassifierChain({ if (claudeEnabled.value) c.termux else null }),
