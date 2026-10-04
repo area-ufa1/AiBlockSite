@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name">Страж вкладок</string>
     <string name="a11y_description">Читает адрес и заголовок активной вкладки браузера и, если страница попадает под включённую категорию, открывает Claude с поддерживающим промптом. Заголовки никуда не отправляются, кроме Claude в Termux, и только если проверка через Claude включена.</string>
+    <string name="guard_channel">Защита включена</string>
+    <string name="guard_title">Страж вкладок защищает</string>
+    <string name="guard_text">Нажмите, чтобы открыть настройки</string>
     <string name="toast_redirect">Страж вкладок: открываю Claude, промпт в буфере</string>
 
     <string name="setup_service_on">Служба доступности включена</string>
