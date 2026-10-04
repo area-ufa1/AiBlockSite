@@ -16,9 +16,17 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+enum class ServiceStatus {
+    /** Off in system settings. */
+    OFF,
+    /** On in settings but Android did not start it (happens after app updates on some firmwares). */
+    STUCK,
+    RUNNING,
+}
+
 data class MainState(
     val categories: List<CategoryWithCount> = emptyList(),
-    val serviceEnabled: Boolean = false,
+    val serviceStatus: ServiceStatus = ServiceStatus.OFF,
     val termuxInstalled: Boolean = false,
     val claudeEnabled: Boolean = false,
     val claudeStatus: String? = null,
@@ -29,9 +37,10 @@ class MainViewModel(
     private val settings: SettingsStore,
     private val termux: TermuxClaudeClassifier,
     private val isServiceEnabled: () -> Boolean,
+    private val isServiceRunning: () -> Boolean,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
-    private val serviceEnabled = MutableStateFlow(isServiceEnabled())
+    private val serviceStatus = MutableStateFlow(currentServiceStatus())
     private val termuxInstalled = MutableStateFlow(termux.isTermuxInstalled())
     private val testStatus = MutableStateFlow<String?>(null)
 
@@ -39,12 +48,12 @@ class MainViewModel(
         repo.observeWithCounts(),
         settings.claudeEnabled,
         settings.lastClaudeError,
-        combine(serviceEnabled, termuxInstalled, ::Pair),
+        combine(serviceStatus, termuxInstalled, ::Pair),
         testStatus,
     ) { categories, claudeEnabled, lastError, (service, installed), status ->
         MainState(
             categories = categories,
-            serviceEnabled = service,
+            serviceStatus = service,
             termuxInstalled = installed,
             claudeEnabled = claudeEnabled && installed,
             claudeStatus = status ?: lastError?.let { "Последняя ошибка: $it" },
@@ -53,8 +62,14 @@ class MainViewModel(
 
     /** Re-checks things the user may have changed in system settings. */
     fun refresh() {
-        serviceEnabled.value = isServiceEnabled()
+        serviceStatus.value = currentServiceStatus()
         termuxInstalled.value = termux.isTermuxInstalled()
+    }
+
+    private fun currentServiceStatus() = when {
+        !isServiceEnabled() -> ServiceStatus.OFF
+        !isServiceRunning() -> ServiceStatus.STUCK
+        else -> ServiceStatus.RUNNING
     }
 
     fun toggleCategory(id: Long, enabled: Boolean) {

@@ -32,12 +32,19 @@ fun SetupCard(
     Card(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val running = state.serviceStatus == ServiceStatus.RUNNING
                 Text(
-                    stringResource(if (state.serviceEnabled) R.string.setup_service_on else R.string.setup_service_off),
+                    stringResource(
+                        when (state.serviceStatus) {
+                            ServiceStatus.RUNNING -> R.string.setup_service_on
+                            ServiceStatus.STUCK -> R.string.setup_service_stuck
+                            ServiceStatus.OFF -> R.string.setup_service_off
+                        },
+                    ),
                     Modifier.weight(1f),
-                    color = if (state.serviceEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+                    color = if (running) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
                 )
-                if (!state.serviceEnabled) Button(onClick = onEnableService) { Text(stringResource(R.string.setup_enable)) }
+                if (!running) Button(onClick = onEnableService) { Text(stringResource(R.string.setup_enable)) }
             }
             HorizontalDivider()
             Row(verticalAlignment = Alignment.CenterVertically) {

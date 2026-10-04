@@ -7,8 +7,9 @@
     <string name="guard_text">Нажмите, чтобы открыть настройки</string>
     <string name="toast_redirect">Страж вкладок: открываю Claude, промпт в буфере</string>
 
-    <string name="setup_service_on">Служба доступности включена</string>
+    <string name="setup_service_on">Защита работает</string>
     <string name="setup_service_off">Служба доступности выключена — защита не работает</string>
+    <string name="setup_service_stuck">Служба включена в настройках, но не запущена — выключите её и включите снова</string>
     <string name="setup_enable">Включить</string>
     <string name="setup_claude">Проверять через Claude (Termux)</string>
     <string name="setup_claude_hint">Если слова и домены ничего не нашли, заголовок проверяет claude -p в Termux под вашей подпиской.</string>

@@ -30,4 +30,11 @@ class KeepAliveTest {
         assertEquals("Страж вкладок защищает", n.extras.getString(Notification.EXTRA_TITLE))
         assertEquals(MainActivity::class.java.name, org.robolectric.Shadows.shadowOf(n.contentIntent).savedIntent.component?.className)
     }
+
+    @Test
+    fun `leaving the app removes its task from recents`() {
+        val controller = org.robolectric.Robolectric.buildActivity(MainActivity::class.java).setup()
+        controller.pause().stop()
+        assertTrue(controller.get().isFinishing)
+    }
 }

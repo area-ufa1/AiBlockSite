@@ -43,8 +43,10 @@ class MainViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun vm(sender: (android.content.Intent) -> Unit = { throw SecurityException("no permission") }) =
-        MainViewModel(repo, settings, TermuxClaudeClassifier(app, 1_000, sender), isServiceEnabled = { true })
+    private fun vm(
+        sender: (android.content.Intent) -> Unit = { throw SecurityException("no permission") },
+        running: () -> Boolean = { true },
+    ) = MainViewModel(repo, settings, TermuxClaudeClassifier(app, 1_000, sender), isServiceEnabled = { true }, isServiceRunning = running)
 
     /** Waits until the state satisfies [predicate]. */
     private fun MainViewModel.await(predicate: (MainState) -> Boolean): MainState = runBlocking {
@@ -56,7 +58,7 @@ class MainViewModelTest {
         val s = vm().await { it.categories.isNotEmpty() }
         assertEquals("Порно", s.categories.single().category.name)
         assertEquals(0, s.categories.single().blockCount)
-        assertEquals(true, s.serviceEnabled)
+        assertEquals(ServiceStatus.RUNNING, s.serviceStatus)
     }
 
     @Test
@@ -82,5 +84,15 @@ class MainViewModelTest {
         vm.setClaudeEnabled(true)
         assertFalse(runBlocking { settings.claudeEnabled.first() })
         assertFalse(vm.state.value.claudeEnabled)
+    }
+
+    @Test
+    fun `enabled but not running service is reported as stuck`() {
+        var running = false
+        val vm = vm(running = { running })
+        assertEquals(ServiceStatus.STUCK, vm.await { it.categories.isNotEmpty() }.serviceStatus)
+        running = true
+        vm.refresh()
+        assertEquals(ServiceStatus.RUNNING, vm.await { it.serviceStatus == ServiceStatus.RUNNING }.serviceStatus)
     }
 }

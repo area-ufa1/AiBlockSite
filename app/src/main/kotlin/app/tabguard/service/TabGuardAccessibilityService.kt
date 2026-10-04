@@ -27,6 +27,7 @@ class TabGuardAccessibilityService : AccessibilityService() {
     private var browsers: Set<String> = emptySet()
 
     override fun onServiceConnected() {
+        running = true
         startGuardForeground()
         val c = container
         browsers = queryBrowsers()
@@ -66,8 +67,16 @@ class TabGuardAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        running = false
         scope.cancel()
         super.onDestroy()
+    }
+
+    companion object {
+        /** True while Android actually has the service connected (same process as the UI). */
+        @Volatile
+        var running = false
+            private set
     }
 
     private fun queryBrowsers(): Set<String> =

@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
         val c = container
         setContent {
             MaterialTheme {
-                val vm = viewModel { MainViewModel(c.repository, c.settings, c.termux, { isServiceEnabled(this@MainActivity) }) }
+                val vm = viewModel { MainViewModel(c.repository, c.settings, c.termux, { isServiceEnabled(this@MainActivity) }, { TabGuardAccessibilityService.running }) }
                 LifecycleResumeEffect(Unit) {
                     vm.refresh()
                     onPauseOrDispose { }
@@ -54,6 +54,15 @@ class MainActivity : ComponentActivity() {
                 App(vm)
             }
         }
+    }
+
+    /**
+     * Some firmwares ignore excludeFromRecents; removing the task when the user leaves means there
+     * is never a card to swipe away (swiping force-stops the app there, killing protection).
+     */
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) finishAndRemoveTask()
     }
 
     @Composable
@@ -79,7 +88,9 @@ class MainActivity : ComponentActivity() {
                     setup = {
                         SetupCard(
                             state = state,
-                            onEnableService = { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+                            onEnableService = {
+                                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                            },
                             onClaudeToggle = vm::setClaudeEnabled,
                             onTestClaude = vm::testClaude,
                             onOpenInstructions = { showInstructions = true },
