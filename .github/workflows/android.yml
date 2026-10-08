@@ -29,3 +29,20 @@ jobs:
         with:
           name: tab-guard-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: cd pc && npm test
+      - name: Package
+        run: bash pc/scripts/package.sh
+      - name: Upload extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: tab-guard-extension
+          path: pc/dist/
