@@ -10,7 +10,8 @@ curl -fsSL "$SRC" \
   | awk '$1 == "0.0.0.0" && $2 != "0.0.0.0" { print tolower($2) }' \
   | sed 's/^www\.//' \
   | grep -E '^[a-z0-9.-]+\.[a-z0-9-]+$' \
-  | sort -u > "$tmp"
+  | sort -u \
+  | grep -vxF -f <(grep -v '^#' "$(dirname "$0")/blocklist-exclude.txt" | sed '/^$/d') > "$tmp"
 
 n=$(wc -l < "$tmp")
 if [ "$n" -gt "$MAX" ]; then

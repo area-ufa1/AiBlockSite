@@ -1,0 +1,9 @@
+# Mainstream sites wrongly present in the upstream porn-only list.
+# scripts/update-blocklist.sh removes these exact hosts; keywords still catch adult pages on them.
+kinopoisk.ru
+rating.kinopoisk.ru
+m.vk.com
+yandex.by
+gs.yandex.com.tr
+video-preview.s3.yandex.net
+my.mail.ru
