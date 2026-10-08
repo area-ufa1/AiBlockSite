@@ -35,6 +35,7 @@ async function open(page, url) {
   // No internet in CI/containers: answer every request locally. Pages under /titled/ get a "bad" title.
   await context.route('**/*', (route) => {
     const url = route.request().url();
+    if (!/^https?:/.test(url)) return route.continue();
     const title = url.includes('/titled/') ? 'Горячее порно видео' : 'Обычная страница';
     route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: `<title>${title}</title><p>ok</p>` });
   });

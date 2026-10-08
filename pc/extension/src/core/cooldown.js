@@ -16,4 +16,9 @@ export class BlockCooldown {
     if (this.#last.size > 500) this.#last.delete(this.#last.keys().next().value);
     return true;
   }
+
+  /** Undo a recorded block that did not happen (e.g. the tab could not be updated), so a later check retries. */
+  forget(tabId, url) {
+    this.#last.delete(`${tabId}|${url}`);
+  }
 }

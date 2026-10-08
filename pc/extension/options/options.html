@@ -1,4 +1,52 @@
 <!doctype html>
-<meta charset="utf-8">
-<title>Страж вкладок</title>
-<p>Настройки появятся в следующей версии.</p>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Страж вкладок — настройки</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="../icons/icon48.png" alt="" width="40" height="40">
+      <h1>Страж вкладок</h1>
+    </header>
+
+    <section class="card status-card">
+      <p id="status"><span class="dot"></span>Защита работает</p>
+      <p id="incognito" class="warning" hidden>
+        Включите «Разрешить в режиме инкогнито» в карточке расширения на странице расширений — иначе в инкогнито защита не работает.
+      </p>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Категории</h2>
+        <button id="add" class="primary">+ Добавить категорию</button>
+      </div>
+      <ul id="categories"></ul>
+    </section>
+
+    <section id="editor" class="card" hidden>
+      <h2 id="editor-title">Новая категория</h2>
+      <label>Название
+        <input id="name" type="text" autocomplete="off">
+      </label>
+      <label>Слова <span class="hint">по одному в строке</span>
+        <textarea id="keywords" rows="6"></textarea>
+      </label>
+      <label>Домены <span class="hint">по одному в строке</span>
+        <textarea id="domains" rows="4"></textarea>
+      </label>
+      <p id="bundled" class="hint" hidden></p>
+      <div class="buttons">
+        <button id="save" class="primary">Сохранить</button>
+        <button id="cancel">Отмена</button>
+        <button id="delete" class="danger" hidden>Удалить</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

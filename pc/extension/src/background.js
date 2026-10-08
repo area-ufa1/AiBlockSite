@@ -23,7 +23,12 @@ async function check(tabId, url, title) {
     const { categories } = await store.getState();
     const verdict = decide({ url, title }, categories, await bundledFor(categories));
     if (!verdict || !cooldown.shouldBlock(tabId, url)) return;
-    await chrome.tabs.update(tabId, { url: verdict.redirectUrl });
+    try {
+      await chrome.tabs.update(tabId, { url: verdict.redirectUrl });
+    } catch (e) {
+      cooldown.forget(tabId, url); // let the title check retry
+      throw e;
+    }
     await Promise.allSettled([copyToClipboard(verdict.prompt), store.incrementStat(verdict.categoryId)]);
   } catch (e) {
     console.error('Страж вкладок:', e);
