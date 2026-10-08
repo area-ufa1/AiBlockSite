@@ -13,7 +13,7 @@ const CLAUDE = 'https://claude.ai/new?q=';
 async function waitFor(fn, ms, label) {
   const end = Date.now() + ms;
   while (Date.now() < end) {
-    if (await fn()) return;
+    if (await Promise.resolve().then(fn).catch(() => false)) return;
     await new Promise((r) => setTimeout(r, 200));
   }
   throw new Error(`timeout: ${label}`);
@@ -46,6 +46,10 @@ async function open(page, url) {
     let [worker] = context.serviceWorkers();
     if (!worker) worker = await context.waitForEvent('serviceworker', { timeout: 10000 });
     const extId = new URL(worker.url()).host;
+    worker.on('console', (m) => { if (m.type() === 'error') console.log(`worker error: ${m.text()}`); });
+    // Events that fire before a freshly installed worker has registered its listeners are dropped;
+    // wait until onInstalled has seeded the default category, i.e. the worker is fully running.
+    await waitFor(async () => (await worker.evaluate(() => chrome.storage.local.get('categories'))).categories, 10000, 'worker ready');
     globalThis.smoke = { context, extId, open, waitFor, check, CLAUDE };
 
     const page = await context.newPage();
