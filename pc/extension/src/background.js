@@ -33,6 +33,7 @@ async function check(tabId, url, title) {
     }
     try {
       await chrome.tabs.update(tabId, { url: verdict.redirectUrl });
+      ensureRedirected(tabId, verdict.redirectUrl);
     } catch (e) {
       cooldown.forget(tabId, url); // let the title check retry
       throw e;
@@ -41,6 +42,21 @@ async function check(tabId, url, title) {
   } catch (e) {
     console.error('Страж вкладок:', e);
   }
+}
+
+/**
+ * Chrome occasionally drops a redirect issued while the original navigation is still starting
+ * (the tab ends up blank). Check once shortly after and redirect again if the tab is not on Claude.
+ */
+function ensureRedirected(tabId, redirectUrl) {
+  setTimeout(async () => {
+    try {
+      const tab = await chrome.tabs.get(tabId);
+      if (!isAllowlisted(tab.pendingUrl || tab.url)) await chrome.tabs.update(tabId, { url: redirectUrl });
+    } catch {
+      // Tab closed meanwhile.
+    }
+  }, 1500);
 }
 
 async function copyToClipboard(text) {
