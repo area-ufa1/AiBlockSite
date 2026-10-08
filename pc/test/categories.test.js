@@ -14,3 +14,6 @@ test('parseKeywords drops blanks and duplicates', () =>
 
 test('parseDomains normalizes urls', () =>
   assert.deepEqual(parseDomains('https://www.X.com/\nне домен'), ['x.com']));
+
+test('parseDomains converts cyrillic domains to punycode like the browser reports', () =>
+  assert.deepEqual(parseDomains('порно.рф'), [new URL('http://порно.рф').hostname]));

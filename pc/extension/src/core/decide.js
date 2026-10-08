@@ -8,8 +8,18 @@ import { buildSupportPrompt, claudeUrl } from './prompt.js';
  */
 export function decide(tab, categories, bundled) {
   if (!tab.url || !/^https?:\/\//i.test(tab.url) || isAllowlisted(tab.url)) return null;
-  const match = matchTab(tab, categories, bundled);
+  // Browsers report URLs percent-encoded (q=%D0%BF…); match and show the readable form.
+  const readable = { url: safeDecode(tab.url), title: tab.title };
+  const match = matchTab(readable, categories, bundled);
   if (!match) return null;
-  const prompt = buildSupportPrompt(tab, match.categoryName);
+  const prompt = buildSupportPrompt(readable, match.categoryName);
   return { categoryId: match.categoryId, categoryName: match.categoryName, prompt, redirectUrl: claudeUrl(prompt) };
+}
+
+function safeDecode(url) {
+  try {
+    return decodeURIComponent(url.replace(/\+/g, ' '));
+  } catch {
+    return url;
+  }
 }

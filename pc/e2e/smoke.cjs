@@ -78,8 +78,10 @@ async function open(page, url) {
       if (stats?.porn !== 2) throw new Error(JSON.stringify(stats));
     });
 
-    const extra = path.join(__dirname, 'options.smoke.cjs');
-    if (fs.existsSync(extra)) await require(extra)(globalThis.smoke);
+    for (const name of ['options.smoke.cjs', 'back.smoke.cjs']) {
+      const extra = path.join(__dirname, name);
+      if (fs.existsSync(extra)) await require(extra)(globalThis.smoke);
+    }
   } finally {
     await context.close();
   }
