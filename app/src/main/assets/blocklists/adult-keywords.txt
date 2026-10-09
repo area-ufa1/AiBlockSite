@@ -1,0 +1,111 @@
+# Built-in keywords for the «Порно» category (shared by the Android app and the PC extension).
+# A word matches the START of a word in the title or address ("обнаж" → "обнаженная").
+# A line with several words matches them in a row ("интим фото" → "интимные фото").
+# Avoid short stems that start ordinary words: анал(из), голы (футбол), cock(tail), ass(essment), cum(ulative), член, ню(анс).
+# Keep in sync with tests: pc/test/keywords.test.js.
+
+# Russian
+порн
+порев
+секс
+голая
+голые
+голый
+голых
+голой
+голенькие
+голенькая
+нагишом
+нагая
+нагие
+обнаж
+эрот
+хентай
+сиськ
+титьк
+минет
+куни
+анальн
+трахн
+трахат
+трахает
+трахаю
+трахнул
+ебля
+ебут
+отсос
+дроч
+мастурб
+шлюх
+стриптиз
+вебкам
+камшот
+групповуха
+интим фото
+интимные фото
+слитые фото
+фетиш
+бдсм
+оргия
+оргии
+пикап видео
+
+# Transliteration
+porno
+pornuha
+golye
+golaya
+seks
+erotika
+siski
+
+# English
+porn
+xxx
+sex
+nude
+nudes
+nudity
+naked
+nsfw
+hentai
+milf
+boobs
+tits
+titties
+pussy
+blowjob
+handjob
+deepthroat
+creampie
+gangbang
+bukkake
+cumshot
+fetish
+bdsm
+bondage
+striptease
+stripper
+topless
+upskirt
+camgirl
+camgirls
+erotic
+lewd
+ecchi
+futanari
+rule34
+dick pics
+onlyfans
+fansly
+chaturbate
+stripchat
+bongacams
+xvideos
+xhamster
+xnxx
+pornhub
+brazzers
+redtube
+youporn
+spankbang

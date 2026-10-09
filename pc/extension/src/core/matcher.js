@@ -26,10 +26,11 @@ export function isAllowlisted(url) {
 
 /**
  * First enabled category the tab falls under: domains of all categories first, then keywords.
- * `category.domains` and the bundled sets must hold normalized hosts.
+ * `category.domains` and the bundled sets must hold normalized hosts; `bundledKeywords` maps a
+ * category's `bundledList` to built-in words that apply on top of the user's own.
  * @returns {{categoryId: string, categoryName: string, source: 'domain'|'keyword'} | null}
  */
-export function matchTab(tab, categories, bundled) {
+export function matchTab(tab, categories, bundled, bundledKeywords = new Map()) {
   const enabled = categories.filter((c) => c.enabled);
   const result = (c, source) => ({ categoryId: c.id, categoryName: c.name, source });
 
@@ -45,7 +46,8 @@ export function matchTab(tab, categories, bundled) {
 
   const texts = [tab.title, tab.url].filter((t) => t).map(tokenize);
   for (const c of enabled) {
-    const keywords = c.keywords.map(tokenize).filter((kw) => kw.length > 0);
+    const builtIn = (c.bundledList && bundledKeywords.get(c.bundledList)) || [];
+    const keywords = [...c.keywords, ...builtIn].map(tokenize).filter((kw) => kw.length > 0);
     if (keywords.some((kw) => texts.some((tokens) => containsPrefixSequence(tokens, kw)))) return result(c, 'keyword');
   }
   return null;

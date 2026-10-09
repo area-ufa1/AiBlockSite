@@ -1,6 +1,7 @@
 // Service worker: watches navigations and titles, sends matching tabs to Claude.
 import { decide } from './core/decide.js';
 import { isAllowlisted } from './core/matcher.js';
+import { safeSearchUrl } from './core/safesearch.js';
 import { BlockCooldown } from './core/cooldown.js';
 import { createStore } from './store.js';
 import { createBundledLoader } from './bundled.js';
@@ -13,17 +14,32 @@ const bundled = createBundledLoader((name) =>
   }));
 const cooldown = new BlockCooldown();
 
+function bundledNames(categories) {
+  return [...new Set(categories.filter((c) => c.enabled && c.bundledList).map((c) => c.bundledList))];
+}
+
+/** Built-in domain sets per bundled list (`blocklists/<name>.txt`). */
 async function bundledFor(categories) {
-  const names = [...new Set(categories.filter((c) => c.enabled && c.bundledList).map((c) => c.bundledList))];
+  const names = bundledNames(categories);
   return new Map(await Promise.all(names.map(async (n) => [n, await bundled.get(n)])));
+}
+
+/** Built-in keywords per bundled list (`blocklists/<name>-keywords.txt`). */
+async function bundledKeywordsFor(categories) {
+  const names = bundledNames(categories);
+  return new Map(await Promise.all(names.map(async (n) => [n, [...(await bundled.get(`${n}-keywords`))]])));
 }
 
 async function check(tabId, url, title) {
   try {
     if (!url || !/^https?:/i.test(url)) return;
     const { categories } = await store.getState();
-    const verdict = decide({ url, title }, categories, await bundledFor(categories));
-    if (!verdict) return;
+    const verdict = decide({ url, title }, categories, await bundledFor(categories), await bundledKeywordsFor(categories));
+    if (!verdict) {
+      const safe = safeSearchUrl(url);
+      if (safe) await chrome.tabs.update(tabId, { url: safe });
+      return;
+    }
     if (!cooldown.shouldBlock(tabId, url)) {
       // Blocked a moment ago. If the tab is already heading to Claude this is the second trigger
       // of one visit; otherwise the user came straight back (Back, same link) — send it again, uncounted.

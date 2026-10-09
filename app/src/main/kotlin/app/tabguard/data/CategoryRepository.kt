@@ -16,11 +16,15 @@ class CategoryRepository(private val db: AppDatabase, private val lists: Bundled
         rows.map { CategoryWithCount(it.category.toModel(), it.category.bundledList, it.blockCount) }
     }
 
-    /** Enabled categories with bundled list domains merged in, ready for matching. */
+    /** Enabled categories with bundled list domains and built-in keywords merged in, ready for matching. */
     suspend fun enabledCategories(): List<Category> = dao.enabled().map { e ->
         val own = e.toModel()
         val bundled = e.bundledList?.let(lists::domains).orEmpty()
-        own.copy(domains = if (own.domains.isEmpty()) bundled else own.domains + bundled)
+        val builtInKeywords = e.bundledList?.let(lists::keywords).orEmpty()
+        own.copy(
+            domains = if (own.domains.isEmpty()) bundled else own.domains + bundled,
+            keywords = (own.keywords + builtInKeywords).distinct(),
+        )
     }
 
     suspend fun get(id: Long): Category? = dao.get(id)?.toModel()

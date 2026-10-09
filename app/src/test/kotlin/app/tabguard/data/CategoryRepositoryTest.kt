@@ -18,8 +18,11 @@ class CategoryRepositoryTest {
     private lateinit var db: AppDatabase
     private lateinit var repo: CategoryRepository
     private val lists = BundledLists { name ->
-        require(name == "adult")
-        "# comment\npornhub.com\n\nxvideos.com\n".byteInputStream()
+        when (name) {
+            "adult" -> "# comment\npornhub.com\n\nxvideos.com\n".byteInputStream()
+            "adult-keywords" -> "# words\nголые\nинтим фото\n".byteInputStream()
+            else -> throw java.io.FileNotFoundException(name)
+        }
     }
 
     @Before
@@ -101,4 +104,16 @@ class CategoryRepositoryTest {
 
     @Test
     fun `bundled list size is reported`() = assertEquals(2, lists.domains("adult").size)
+
+    @Test
+    fun `enabledCategories adds built-in keywords to the user's own`() = runTest {
+        val seedId = repo.observeWithCounts().first().single().category.id
+        repo.save(seedId, "Порно", "мое слово", "")
+        assertEquals(listOf("мое слово", "голые", "интим фото"), repo.enabledCategories().single().keywords)
+    }
+
+    @Test
+    fun `built-in keywords are not shown as the user's own`() = runTest {
+        assertEquals(AppDatabase.SEED_KEYWORDS, repo.observeWithCounts().first().single().category.keywords)
+    }
 }
