@@ -6,6 +6,16 @@ export const WINDOW_MS = 5 * MIN;
 export const PIN_LOCKOUT_MS = 30 * MIN;
 export const MAX_PIN_ATTEMPTS = 5;
 
+/** Typed (not pasted) before a pause can start: a moment to notice what is happening. */
+export const PAUSE_PHRASE = 'Я осознанно ослабляю свою защиту';
+
+const simplify = (s) => s.toLowerCase().replaceAll('ё', 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+/** Case, spacing and punctuation do not matter. */
+export function phraseMatches(text) {
+  return simplify(text ?? '') === simplify(PAUSE_PHRASE);
+}
+
 /** @typedef {{mode: 'pause'|'partner'|null, pauseMinutes: number, pinHash: string|null, salt: string|null,
  *   countdownStartedAt: number|null, unlockedUntil: number, failedAttempts: number, pinLockedUntil: number}} LockState */
 

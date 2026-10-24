@@ -24,6 +24,10 @@ module.exports = async ({ context, extId, waitFor, check }) => {
     await porn(p).waitFor();
     await porn(p).click();
     await p.locator('#unlock[open]').waitFor({ timeout: 5000 });
+    if (!(await p.isDisabled('#start-countdown'))) throw new Error('pause can start without the phrase');
+    await p.locator('#phrase').pressSequentially('Я осознанно ослабляю свою защиту');
+    if (await p.isDisabled('#start-countdown')) throw new Error('typed phrase not accepted');
+    if (!(await p.locator('footer #weaken').count())) throw new Error('weaken button is not in the footer');
     if (!(await porn(p).isChecked())) throw new Error('toggle stayed off');
     const cats = await storage('categories');
     if (!cats.find((c) => c.id === 'porn').enabled) throw new Error('disabled in storage');

@@ -84,4 +84,12 @@ class LockTest {
         val threw = try { block(); false } catch (e: IllegalArgumentException) { true }
         assertTrue("expected IllegalArgumentException", threw)
     }
+
+    @Test fun `pause starts only after the phrase is typed`() {
+        assertEquals("Я осознанно ослабляю свою защиту", Lock.PAUSE_PHRASE)
+        assertTrue(Lock.phraseMatches("Я осознанно ослабляю свою защиту"))
+        assertTrue(Lock.phraseMatches("  я  осознанно ослабляю свою защиту. "))
+        assertFalse(Lock.phraseMatches("Я осознанно ослабляю"))
+        assertFalse(Lock.phraseMatches(""))
+    }
 }

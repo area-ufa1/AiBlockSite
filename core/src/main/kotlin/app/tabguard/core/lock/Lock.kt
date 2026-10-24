@@ -26,6 +26,15 @@ object Lock {
     const val PIN_LOCKOUT_MS = 30 * MIN
     const val MAX_PIN_ATTEMPTS = 5
 
+    /** Typed (not pasted) before a pause can start: a moment to notice what is happening. */
+    const val PAUSE_PHRASE = "Я осознанно ослабляю свою защиту"
+
+    private val NON_WORD = Regex("[^\\p{L}\\p{N}]+")
+    private fun simplify(s: String) = s.lowercase().replace('ё', 'е').replace(NON_WORD, " ").trim()
+
+    /** Case, spacing and punctuation do not matter. */
+    fun phraseMatches(text: String): Boolean = simplify(text) == simplify(PAUSE_PHRASE)
+
     /** Weakening changes are allowed: not configured yet, or inside the window. */
     fun isUnlocked(state: LockState, now: Long): Boolean = state.mode == null || now < state.unlockedUntil
 

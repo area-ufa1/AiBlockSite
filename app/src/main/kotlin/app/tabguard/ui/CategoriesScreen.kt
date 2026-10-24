@@ -33,6 +33,7 @@ fun CategoriesScreen(
     onOpen: (Long) -> Unit,
     onAdd: () -> Unit,
     setup: @Composable () -> Unit,
+    footer: @Composable () -> Unit = {},
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
@@ -61,6 +62,7 @@ fun CategoriesScreen(
                     }
                 }
             }
+            item { footer() }
         }
     }
 }

@@ -81,3 +81,12 @@ test('weakening rules', () => {
   assert.equal(isWeakening(cat(), cat({ keywords: ['a', 'b', 'c'], name: 'New' })), false, 'add word, rename');
   assert.equal(isWeakening(null, cat()), false, 'create');
 });
+
+test('pause starts only after the phrase is typed', async () => {
+  const { PAUSE_PHRASE, phraseMatches } = await import('../extension/src/core/lock.js');
+  assert.equal(PAUSE_PHRASE, 'Я осознанно ослабляю свою защиту');
+  assert.ok(phraseMatches('Я осознанно ослабляю свою защиту'));
+  assert.ok(phraseMatches('  я  осознанно ослабляю свою защиту. '));
+  assert.ok(!phraseMatches('Я осознанно ослабляю'));
+  assert.ok(!phraseMatches(''));
+});

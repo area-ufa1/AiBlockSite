@@ -47,10 +47,11 @@
     <string name="lock_partner">Защита: PIN напарника</string>
     <string name="lock_open">Изменения открыты ещё %1$d мин</string>
     <string name="lock_countdown">Пауза: изменения откроются через %1$d мин</string>
-    <string name="lock_weaken">Ослабить защиту</string>
+    <string name="lock_weaken_small">ослабить защиту</string>
     <string name="lock_change_mode">Сменить режим защиты</string>
     <string name="unlock_title">Изменение защищено</string>
     <string name="unlock_pause_text">Выключать категории и убирать слова можно после паузы. Если желание пройдёт за это время — отлично, значит, защита сработала.</string>
+    <string name="unlock_phrase_hint">Чтобы начать паузу, напишите вручную: «%1$s»</string>
     <string name="unlock_start">Начать паузу</string>
     <string name="unlock_cancel">Отменить паузу</string>
     <string name="unlock_talk">Поговорить с Claude</string>

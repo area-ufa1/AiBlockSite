@@ -33,13 +33,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import app.tabguard.R
+import app.tabguard.core.lock.Lock
 import app.tabguard.core.lock.LockMode
 
 private fun minutesLeft(ms: Long) = ((ms + 59_999) / 60_000).toInt()
 
 /** Status line and actions of the protection, shown on the main screen. */
 @Composable
-fun LockCard(state: MainState, onWeaken: () -> Unit, onChangeMode: () -> Unit, version: String, onUpdates: () -> Unit) {
+fun LockCard(state: MainState, onChangeMode: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.lock_title), style = MaterialTheme.typography.titleSmall)
@@ -54,13 +55,23 @@ fun LockCard(state: MainState, onWeaken: () -> Unit, onChangeMode: () -> Unit, v
                     else -> stringResource(R.string.lock_partner)
                 },
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (lock.mode != null && !state.lockOpen) OutlinedButton(onClick = onWeaken) { Text(stringResource(R.string.lock_weaken)) }
-                if (state.lockOpen) TextButton(onClick = onChangeMode) { Text(stringResource(R.string.lock_change_mode)) }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.version_line, version), style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = onUpdates) { Text(stringResource(R.string.check_updates)) }
+            if (state.lockOpen) TextButton(onClick = onChangeMode) { Text(stringResource(R.string.lock_change_mode)) }
+        }
+    }
+}
+
+/** Bottom of the main screen: version, updates and — deliberately out of the way — weakening. */
+@Composable
+fun LockFooter(state: MainState, version: String, onUpdates: () -> Unit, onWeaken: () -> Unit) {
+    val small = MaterialTheme.typography.bodySmall
+    Column(Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 88.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.version_line, version), style = small)
+            TextButton(onClick = onUpdates) { Text(stringResource(R.string.check_updates), style = small) }
+        }
+        if (state.lock.mode != null && !state.lockOpen) {
+            TextButton(onClick = onWeaken) {
+                Text(stringResource(R.string.lock_weaken_small), style = small, color = MaterialTheme.colorScheme.outline)
             }
         }
     }
@@ -77,6 +88,7 @@ fun UnlockDialog(
     onClose: () -> Unit,
 ) {
     var pin by rememberSaveable { mutableStateOf("") }
+    var phrase by rememberSaveable { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(stringResource(R.string.unlock_title)) },
@@ -87,9 +99,23 @@ fun UnlockDialog(
                     state.countdownLeftMs?.let {
                         Text(stringResource(R.string.lock_countdown, minutesLeft(it)), style = MaterialTheme.typography.titleMedium)
                     }
+                    if (state.countdownLeftMs == null) {
+                        Text(stringResource(R.string.unlock_phrase_hint, Lock.PAUSE_PHRASE))
+                        OutlinedTextField(
+                            phrase,
+                            // Typed, not pasted: a jump of several characters at once is ignored.
+                            { if (it.length <= phrase.length + 2) phrase = it },
+                            singleLine = true,
+                        )
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (state.countdownLeftMs == null) Button(onClick = onStart) { Text(stringResource(R.string.unlock_start)) }
-                        else OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.unlock_cancel)) }
+                        if (state.countdownLeftMs == null) {
+                            Button(onClick = { onStart(); phrase = "" }, enabled = Lock.phraseMatches(phrase)) {
+                                Text(stringResource(R.string.unlock_start))
+                            }
+                        } else {
+                            OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.unlock_cancel)) }
+                        }
                     }
                     TextButton(onClick = onTalk) { Text(stringResource(R.string.unlock_talk)) }
                 } else {

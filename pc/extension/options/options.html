@@ -17,7 +17,6 @@
       <p id="status"><span class="dot"></span>Защита работает</p>
       <p id="lock-status" class="lock-status"></p>
       <div class="buttons">
-        <button id="weaken" hidden>Ослабить защиту</button>
         <a id="change-mode" href="setup.html" hidden>Сменить режим защиты</a>
       </div>
       <p id="incognito" class="warning" hidden>
@@ -64,6 +63,7 @@
     <footer class="hint">
       Версия <span id="version"></span> ·
       <a id="updates" href="https://github.com/area-ufa1/AiBlockSite/releases/latest" target="_blank" rel="noopener">Проверить обновления</a>
+      <span id="weaken-wrap"> · <button id="weaken" class="link" hidden>ослабить защиту</button></span>
     </footer>
   </main>
 
@@ -72,8 +72,11 @@
     <div id="unlock-pause" hidden>
       <p>Выключать категории и убирать слова можно после паузы. Если желание пройдёт за это время — отлично, значит, защита сработала.</p>
       <p id="countdown" class="countdown"></p>
+      <label id="phrase-label">Чтобы начать паузу, напишите вручную: <b>Я осознанно ослабляю свою защиту</b>
+        <input id="phrase" type="text" autocomplete="off" spellcheck="false">
+      </label>
       <div class="buttons">
-        <button id="start-countdown" class="primary">Начать паузу</button>
+        <button id="start-countdown" class="primary" disabled>Начать паузу</button>
         <button id="cancel-countdown" hidden>Отменить паузу</button>
         <a id="talk" class="button" target="_blank" rel="noopener">Поговорить с Claude</a>
       </div>

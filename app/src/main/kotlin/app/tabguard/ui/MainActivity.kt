@@ -122,13 +122,7 @@ class MainActivity : ComponentActivity() {
                     onAdd = { nav.navigate("edit/-1") },
                     setup = {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        LockCard(
-                            state = state,
-                            onWeaken = vm::requestUnlock,
-                            onChangeMode = { changingMode = true },
-                            version = versionName(),
-                            onUpdates = { openUrl(RELEASES_URL) },
-                        )
+                        LockCard(state = state, onChangeMode = { changingMode = true })
                         SetupCard(
                             state = state,
                             onEnableService = {
@@ -139,6 +133,14 @@ class MainActivity : ComponentActivity() {
                             onOpenInstructions = { showInstructions = true },
                         )
                         }
+                    },
+                    footer = {
+                        LockFooter(
+                            state = state,
+                            version = versionName(),
+                            onUpdates = { openUrl(RELEASES_URL) },
+                            onWeaken = vm::requestUnlock,
+                        )
                     },
                 )
             }

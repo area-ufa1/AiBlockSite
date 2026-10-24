@@ -1,5 +1,5 @@
 // Protection UI shared by the options page: status line, the unlock dialog (pause or partner PIN).
-import { remainingCountdownMs, startCountdown, cancelCountdown, tryPin, isUnlocked } from '../src/core/lock.js';
+import { remainingCountdownMs, startCountdown, cancelCountdown, tryPin, isUnlocked, phraseMatches } from '../src/core/lock.js';
 import { claudeUrl } from '../src/core/prompt.js';
 
 const $ = (id) => document.getElementById(id);
@@ -25,9 +25,11 @@ export function createUnlockUi(store) {
     else text = lock.mode === 'pause' ? `Защита: пауза ${lock.pauseMinutes} мин` : 'Защита: PIN напарника';
     $('lock-status').textContent = text;
     $('weaken').hidden = lock.mode === null || open;
+    $('weaken-wrap').hidden = $('weaken').hidden;
     $('change-mode').hidden = !(lock.mode === null || open);
     $('countdown').textContent = left !== null ? `Осталось ${minutes(left)} мин` : '';
     $('start-countdown').hidden = left !== null;
+    $('phrase-label').hidden = left !== null;
     $('cancel-countdown').hidden = left === null;
     if (open && $('unlock').open) $('unlock').close();
     return lock;
@@ -39,14 +41,22 @@ export function createUnlockUi(store) {
     $('unlock-partner').hidden = lock.mode !== 'partner';
     $('pin-error').textContent = '';
     $('pin-input').value = '';
+    $('phrase').value = '';
+    $('start-countdown').disabled = true;
     if (!$('unlock').open) $('unlock').showModal();
     await renderStatus();
   }
 
   $('talk').href = claudeUrl(WANT_TO_DISABLE_PROMPT);
   $('weaken').addEventListener('click', show);
+  // The phrase is typed, not pasted or dropped in.
+  for (const type of ['paste', 'drop']) $('phrase').addEventListener(type, (e) => e.preventDefault());
+  $('phrase').addEventListener('input', () => {
+    $('start-countdown').disabled = !phraseMatches($('phrase').value);
+  });
   $('unlock-close').addEventListener('click', () => $('unlock').close());
   $('start-countdown').addEventListener('click', async () => {
+    if (!phraseMatches($('phrase').value)) return;
     await store.saveLock(startCountdown(await store.getLock(), Date.now()));
     await renderStatus();
   });
