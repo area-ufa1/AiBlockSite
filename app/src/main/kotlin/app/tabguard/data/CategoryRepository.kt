@@ -1,6 +1,7 @@
 package app.tabguard.data
 
 import app.tabguard.core.model.Category
+import app.tabguard.core.lock.Lock
 import app.tabguard.core.match.LocalMatcher
 import app.tabguard.core.model.VerdictSource
 import app.tabguard.core.support.PromptKind
@@ -63,6 +64,30 @@ class CategoryRepository(private val db: AppDatabase, private val lists: Bundled
             )
             existing.id
         }
+    }
+
+    /** Whether [save] with these inputs (or deleting, when [deleting]) would weaken protection. */
+    suspend fun wouldWeaken(
+        id: Long,
+        keywordsText: String? = null,
+        domainsText: String? = null,
+        prefixesText: String? = null,
+        onlyHostsText: String? = null,
+        enabled: Boolean? = null,
+        deleting: Boolean = false,
+    ): Boolean {
+        val before = get(id) ?: return false
+        if (deleting) return Lock.isWeakening(before, null)
+        val after = before.copy(
+            enabled = enabled ?: before.enabled,
+            keywords = keywordsText?.let(::parseList) ?: before.keywords,
+            domains = domainsText?.let { t -> parseList(t).mapNotNull(::extractHost).toSet() } ?: before.domains,
+            urlPrefixes = prefixesText?.let { t ->
+                t.split('\n', ',').map(LocalMatcher::normalizeForPrefix).filter { it.isNotEmpty() }.distinct()
+            } ?: before.urlPrefixes,
+            onlyHosts = onlyHostsText?.let { t -> parseList(t).mapNotNull(::extractHost).toSet() } ?: before.onlyHosts,
+        )
+        return Lock.isWeakening(before, after)
     }
 
     /** Which supportive text a block in this category uses. */

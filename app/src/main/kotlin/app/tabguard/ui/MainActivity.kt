@@ -5,16 +5,20 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,10 +33,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.ui.unit.dp
 import app.tabguard.R
 import app.tabguard.container
 import app.tabguard.service.TabGuardAccessibilityService
+import app.tabguard.core.support.SupportPrompt
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
@@ -68,6 +75,34 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun App(vm: MainViewModel) {
         val state by vm.state.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) {
+            while (true) {
+                vm.tick()
+                delay(1000)
+            }
+        }
+        if (state.needsSetup && state.categories.isNotEmpty()) {
+            SetupScreen(state, vm::completeSetup)
+            return
+        }
+        var changingMode by rememberSaveable { mutableStateOf(false) }
+        if (changingMode && state.lockOpen) {
+            SetupScreen(state) { mode, minutes, pin, porn, youtube ->
+                vm.completeSetup(mode, minutes, pin, porn, youtube)
+                changingMode = false
+            }
+            return
+        }
+        if (state.unlockRequested) {
+            UnlockDialog(
+                state = state,
+                onStart = vm::startCountdown,
+                onCancel = vm::cancelCountdown,
+                onPin = vm::submitPin,
+                onTalk = { openUrl(SupportPrompt.claudeUrl(getString(R.string.unlock_want_prompt))) },
+                onClose = vm::dismissUnlock,
+            )
+        }
         val nav = rememberNavController()
         var showInstructions by rememberSaveable { mutableStateOf(false) }
         if (showInstructions) {
@@ -86,6 +121,14 @@ class MainActivity : ComponentActivity() {
                     onOpen = { nav.navigate("edit/$it") },
                     onAdd = { nav.navigate("edit/-1") },
                     setup = {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LockCard(
+                            state = state,
+                            onWeaken = vm::requestUnlock,
+                            onChangeMode = { changingMode = true },
+                            version = versionName(),
+                            onUpdates = { openUrl(RELEASES_URL) },
+                        )
                         SetupCard(
                             state = state,
                             onEnableService = {
@@ -95,6 +138,7 @@ class MainActivity : ComponentActivity() {
                             onTestClaude = vm::testClaude,
                             onOpenInstructions = { showInstructions = true },
                         )
+                        }
                     },
                 )
             }
@@ -107,7 +151,9 @@ class MainActivity : ComponentActivity() {
                 CategoryEditScreen(
                     existing = existing,
                     bundledCount = bundledCount,
-                    onSave = { name, keywords, domains -> vm.saveCategory(id, name, keywords, domains); nav.popBackStack() },
+                    onSave = { name, keywords, domains, prefixes, onlyHosts ->
+                        vm.saveCategory(id, name, keywords, domains, prefixes, onlyHosts); nav.popBackStack()
+                    },
                     onDelete = { id?.let(vm::deleteCategory); nav.popBackStack() },
                     onBack = { nav.popBackStack() },
                 )
@@ -115,7 +161,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun openUrl(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    private fun versionName(): String =
+        runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "?"
+
     companion object {
+        const val RELEASES_URL = "https://github.com/area-ufa1/AiBlockSite/releases/latest"
+
         fun isServiceEnabled(context: Context): Boolean {
             val enabled = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
             val me = ComponentName(context, TabGuardAccessibilityService::class.java)

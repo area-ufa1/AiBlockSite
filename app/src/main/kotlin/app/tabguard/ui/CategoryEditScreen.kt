@@ -36,13 +36,15 @@ import app.tabguard.data.CategoryWithCount
 fun CategoryEditScreen(
     existing: CategoryWithCount?,
     bundledCount: Int,
-    onSave: (name: String, keywords: String, domains: String) -> Unit,
+    onSave: (name: String, keywords: String, domains: String, prefixes: String, onlyHosts: String) -> Unit,
     onDelete: () -> Unit,
     onBack: () -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf(existing?.category?.name.orEmpty()) }
     var keywords by rememberSaveable { mutableStateOf(existing?.category?.keywords.orEmpty().joinToString("\n")) }
     var domains by rememberSaveable { mutableStateOf(existing?.category?.domains.orEmpty().sorted().joinToString("\n")) }
+    var prefixes by rememberSaveable { mutableStateOf(existing?.category?.urlPrefixes.orEmpty().joinToString("\n")) }
+    var onlyHosts by rememberSaveable { mutableStateOf(existing?.category?.onlyHosts.orEmpty().sorted().joinToString(", ")) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -60,11 +62,13 @@ fun CategoryEditScreen(
             OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.edit_name)) }, singleLine = true)
             OutlinedTextField(keywords, { keywords = it }, Modifier.fillMaxWidth().heightIn(min = 140.dp), label = { Text(stringResource(R.string.edit_keywords)) })
             OutlinedTextField(domains, { domains = it }, Modifier.fillMaxWidth().heightIn(min = 120.dp), label = { Text(stringResource(R.string.edit_domains)) })
+            OutlinedTextField(prefixes, { prefixes = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.edit_prefixes)) })
+            OutlinedTextField(onlyHosts, { onlyHosts = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.edit_only_hosts)) }, singleLine = true)
             if (existing?.bundledList != null) {
                 Text(stringResource(R.string.edit_bundled, bundledCount), style = MaterialTheme.typography.bodySmall)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { onSave(name, keywords, domains) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.edit_save)) }
+                Button(onClick = { onSave(name, keywords, domains, prefixes, onlyHosts) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.edit_save)) }
                 if (existing != null) OutlinedButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.edit_delete)) }
             }
         }

@@ -40,4 +40,41 @@
 6. Добавьте allow-external-apps=true в ~/.termux/termux.properties и выполните termux-reload-settings.
 7. В настройках Android выдайте «Стражу вкладок» разрешение «Run commands in Termux environment».
 8. Нажмите «Проверить связь».</string>
+    <string name="lock_title">Защита от отключения</string>
+    <string name="lock_not_set">Защита от отключения не настроена</string>
+    <string name="lock_pause">Защита: пауза %1$d мин</string>
+    <string name="lock_partner">Защита: PIN напарника</string>
+    <string name="lock_open">Изменения открыты ещё %1$d мин</string>
+    <string name="lock_countdown">Пауза: изменения откроются через %1$d мин</string>
+    <string name="lock_weaken">Ослабить защиту</string>
+    <string name="lock_change_mode">Сменить режим защиты</string>
+    <string name="unlock_title">Изменение защищено</string>
+    <string name="unlock_pause_text">Выключать категории и убирать слова можно после паузы. Если желание пройдёт за это время — отлично, значит, защита сработала.</string>
+    <string name="unlock_start">Начать паузу</string>
+    <string name="unlock_cancel">Отменить паузу</string>
+    <string name="unlock_talk">Поговорить с Claude</string>
+    <string name="unlock_partner_text">Изменение подтверждает напарник: попросите его ввести PIN.</string>
+    <string name="unlock_pin">PIN</string>
+    <string name="unlock_confirm">Подтвердить</string>
+    <string name="unlock_close">Закрыть</string>
+    <string name="unlock_want_prompt">Мне хочется отключить защиту, которую я сам себе поставил от нежелательных сайтов и бесконечной ленты. Пожалуйста, мягко и без осуждения помоги разобраться, что со мной сейчас происходит, и справиться с этим желанием: предложи пару конкретных действий на ближайшие 10 минут.</string>
+    <string name="setup_title">Настройка «Стража вкладок»</string>
+    <string name="setup_what">1. Что блокировать</string>
+    <string name="setup_porn">Порно — сайты для взрослых и поиск по откровенным словам</string>
+    <string name="setup_youtube">YouTube: развлечения — Shorts и развлекательные видео в браузере. Учебные видео открываются.</string>
+    <string name="setup_protection">2. Защита от отключения</string>
+    <string name="setup_protection_hint">Добавлять и включать можно всегда. Выключать категории, убирать слова и отключать службу в настройках телефона — только так:</string>
+    <string name="setup_mode_pause">Пауза: ждёте выбранное время, потом изменения открыты 5 минут</string>
+    <string name="setup_mode_partner">Напарник: изменения подтверждает PIN, который знает только он</string>
+    <string name="setup_minutes">Пауза: %1$d мин</string>
+    <string name="setup_pin">PIN (4–8 цифр)</string>
+    <string name="setup_pin2">PIN ещё раз</string>
+    <string name="setup_pin_mismatch">PIN не совпадает</string>
+    <string name="setup_pin_invalid">PIN — от 4 до 8 цифр</string>
+    <string name="setup_done">Готово</string>
+    <string name="protected_screen">Отключение защищено — откройте Страж вкладок</string>
+    <string name="version_line">Версия %1$s</string>
+    <string name="check_updates">Проверить обновления</string>
+    <string name="edit_prefixes">Начинается с адреса (по одному в строке)</string>
+    <string name="edit_only_hosts">Слова только на сайтах (через запятую; пусто — везде)</string>
 </resources>

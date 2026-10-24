@@ -17,6 +17,9 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import app.tabguard.core.lock.LockMode
+import app.tabguard.core.lock.LockState
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,6 +38,8 @@ class MainViewModelTest {
         Dispatchers.setMain(Dispatchers.Unconfined)
         db = AppDatabase.build(app, inMemory = true)
         repo = CategoryRepository(db, BundledLists { "".byteInputStream() })
+        // DataStore is a process-wide singleton: start every test from an unconfigured lock.
+        runBlocking { settings.saveLock(LockState()) }
     }
 
     @After
@@ -94,5 +99,42 @@ class MainViewModelTest {
         running = true
         vm.refresh()
         assertEquals(ServiceStatus.RUNNING, vm.await { it.serviceStatus == ServiceStatus.RUNNING }.serviceStatus)
+    }
+
+    @Test
+    fun `setup is required until a mode is chosen`() {
+        val vm = vm()
+        assertTrue(vm.await { it.categories.isNotEmpty() }.needsSetup)
+        vm.completeSetup(LockMode.PAUSE, minutes = 10, pin = null, porn = true, youtube = true)
+        val s = vm.await { !it.needsSetup }
+        assertEquals(LockMode.PAUSE, s.lock.mode)
+        assertTrue(s.categories.first { it.bundledList == "youtube-fun" }.category.enabled)
+    }
+
+    @Test
+    fun `toggle off while locked is refused with message`() {
+        val vm = vm()
+        vm.await { it.categories.isNotEmpty() }
+        vm.completeSetup(LockMode.PAUSE, minutes = 20, pin = null, porn = true, youtube = false)
+        vm.await { !it.needsSetup }
+        val id = vm.state.value.categories.first { it.bundledList == "adult" }.category.id
+        vm.toggleCategory(id, false)
+        vm.await { it.unlockRequested }
+        assertTrue(runBlocking { repo.get(id)!!.enabled })
+    }
+
+    @Test
+    fun `partner pin opens changes`() {
+        val vm = vm()
+        vm.await { it.categories.isNotEmpty() }
+        vm.completeSetup(LockMode.PARTNER, minutes = 20, pin = "4321", porn = true, youtube = false)
+        vm.await { !it.needsSetup }
+        vm.submitPin("0000")
+        assertEquals("Неверный PIN", vm.await { it.pinError != null }.pinError)
+        vm.submitPin("4321")
+        vm.await { it.lockOpen }
+        val id = vm.state.value.categories.first { it.bundledList == "adult" }.category.id
+        vm.toggleCategory(id, false)
+        vm.await { s -> s.categories.first { it.bundledList == "adult" }.category.enabled.not() }
     }
 }
