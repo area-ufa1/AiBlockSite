@@ -31,11 +31,12 @@ async function bundledKeywordsFor(categories) {
   return new Map(await Promise.all(names.map(async (n) => [n, [...(await bundled.get(`${n}-keywords`))]])));
 }
 
-async function check(tabId, url, title) {
+/** `genre`: the YouTube video category reported by the content script, when there is one. */
+async function check(tabId, url, title, genre = null) {
   try {
     if (!url || !/^https?:/i.test(url)) return;
     const { categories } = await store.getState();
-    const verdict = decide({ url, title }, categories, await bundledFor(categories), await bundledKeywordsFor(categories));
+    const verdict = decide({ url, title, genre }, categories, await bundledFor(categories), await bundledKeywordsFor(categories));
     if (!verdict) {
       const safe = safeSearchUrl(url);
       if (safe) await chrome.tabs.update(tabId, { url: safe });
@@ -95,6 +96,13 @@ chrome.webNavigation.onBeforeNavigate.addListener((d) => {
 // without a title event, and single-page sites change the URL without a new navigation.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.title || changeInfo.url || changeInfo.status === 'complete') check(tabId, tab.url, tab.title ?? null);
+});
+
+// The YouTube content script reports the category of the video the tab is showing.
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (message?.type === 'youtube-genre' && sender.tab?.id !== undefined) {
+    check(sender.tab.id, sender.tab.url, sender.tab.title ?? null, String(message.genre));
+  }
 });
 
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
