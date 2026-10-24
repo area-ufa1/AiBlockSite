@@ -7,10 +7,13 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+/** Unset and empty (an absent CI secret) both mean "not given". */
+fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotEmpty() }
+
 // Release tags look like v1.2.3; everything else is a dev build.
-val appVersion: String = System.getenv("TABGUARD_VERSION")?.removePrefix("v")?.takeIf { it.isNotBlank() } ?: "0.0.0-dev"
+val appVersion: String = env("TABGUARD_VERSION")?.removePrefix("v")?.takeIf { it.isNotBlank() } ?: "0.0.0-dev"
 val appVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(appVersion)
-    ?.destructured?.let { (a, b, c) -> a.toInt() * 10_000 + b.toInt() * 100 + c.toInt() } ?: 1
+    ?.destructured?.let { (a, b, c) -> a.toInt() * 10_000 + b.toInt() * 100 + c.toInt() }?.coerceAtLeast(1) ?: 1
 
 android {
     namespace = "app.tabguard"
@@ -26,15 +29,15 @@ android {
 
     // One key for every build so each APK installs over the previous one. CI decodes it from the
     // ANDROID_KEYSTORE_BASE64 secret; without it (forks, local) the default debug key is used.
-    val keystore = System.getenv("TABGUARD_KEYSTORE")?.let(::file)?.takeIf { it.exists() }
+    val keystore = env("TABGUARD_KEYSTORE")?.let(::file)?.takeIf { it.exists() }
         ?: file("debug.keystore").takeIf { it.exists() }
     signingConfigs {
         if (keystore != null) {
             create("tabguard") {
                 storeFile = keystore
-                storePassword = System.getenv("TABGUARD_KEYSTORE_PASSWORD") ?: "android"
-                keyAlias = System.getenv("TABGUARD_KEY_ALIAS") ?: "androiddebugkey"
-                keyPassword = System.getenv("TABGUARD_KEY_PASSWORD") ?: "android"
+                storePassword = env("TABGUARD_KEYSTORE_PASSWORD") ?: "android"
+                keyAlias = env("TABGUARD_KEY_ALIAS") ?: "androiddebugkey"
+                keyPassword = env("TABGUARD_KEY_PASSWORD") ?: "android"
             }
         }
     }
