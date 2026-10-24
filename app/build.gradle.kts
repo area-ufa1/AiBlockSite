@@ -7,6 +7,11 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// Release tags look like v1.2.3; everything else is a dev build.
+val appVersion: String = System.getenv("TABGUARD_VERSION")?.removePrefix("v")?.takeIf { it.isNotBlank() } ?: "0.0.0-dev"
+val appVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(appVersion)
+    ?.destructured?.let { (a, b, c) -> a.toInt() * 10_000 + b.toInt() * 100 + c.toInt() } ?: 1
+
 android {
     namespace = "app.tabguard"
     compileSdk = 36
@@ -15,22 +20,32 @@ android {
         applicationId = "app.tabguard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersion
     }
 
-    // Fixed debug key in the repo so every CI build can be installed over the previous one.
+    // One key for every build so each APK installs over the previous one. CI decodes it from the
+    // ANDROID_KEYSTORE_BASE64 secret; without it (forks, local) the default debug key is used.
+    val keystore = System.getenv("TABGUARD_KEYSTORE")?.let(::file)?.takeIf { it.exists() }
+        ?: file("debug.keystore").takeIf { it.exists() }
     signingConfigs {
-        getByName("debug") {
-            storeFile = file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        if (keystore != null) {
+            create("tabguard") {
+                storeFile = keystore
+                storePassword = System.getenv("TABGUARD_KEYSTORE_PASSWORD") ?: "android"
+                keyAlias = System.getenv("TABGUARD_KEY_ALIAS") ?: "androiddebugkey"
+                keyPassword = System.getenv("TABGUARD_KEY_PASSWORD") ?: "android"
+            }
         }
     }
 
     buildTypes {
-        getByName("debug") { signingConfig = signingConfigs.getByName("debug") }
+        val signing = signingConfigs.findByName("tabguard") ?: signingConfigs.getByName("debug")
+        getByName("debug") { signingConfig = signing }
+        getByName("release") {
+            isMinifyEnabled = false
+            signingConfig = signing
+        }
     }
 
     buildFeatures { compose = true }
