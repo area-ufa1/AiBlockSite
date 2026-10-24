@@ -1,106 +1,324 @@
 # Built-in keywords for the «Порно» category (shared by the Android app and the PC extension).
-# A word matches the START of a word in the title or address ("обнаж" → "обнаженная").
+# A word matches the START of a word in the title or address ("обнаж" → "обнаженная"); ё = е.
 # A line with several words matches them in a row ("интим фото" → "интимные фото").
-# Avoid short stems that start ordinary words: анал(из), голы (футбол), cock(tail), ass(essment), cum(ulative), член, ню(анс).
+# Avoid short stems that start ordinary words: анал(из), голы (футбол), cock(tail), ass(essment), cum(ulative),
+# свинг (танец), дойк(а), вибратор (для бетона), кончает(ся), squirt(le), cumming(s), bottomless (brunch), deep throat (Watergate),
+# член, ню(анс), куни(ца), киск(а), попк(орн), раздева(лка), путан(ица), кончил(ось), раком (болеть), юри(ст), jav(a), wank(el).
 # Keep in sync with tests: pc/test/keywords.test.js.
 
-# Russian
+# Russian: general
 порн
 порев
 секс
+эрот
+интим фото
+интимные фото
+интим видео
+интимное видео
+интим услуги
+интим досуг
+интим знакомства
+интим переписк
+слив фото
+слитые фото
+слив видео
+слитые видео
+слив интим
+слив приватн
+приватное видео
+приватные фото
+для взрослых 18
+18 плюс видео
+xxx видео
+горячие девушки
+горячее видео
+пикап видео
+
+# Russian: nudity
 голая
 голые
 голый
 голых
 голой
-голенькие
+голую
 голенькая
+голенькие
+голеньк
+голышом
 нагишом
 нагая
 нагие
+нагота
 обнаж
-эрот
-хентай
+раздетая
+раздетые
+раздетую
+раздетой
+раздетых
+без одежды
+без трусов
+без трусиков
+без лифчика
+без белья
+в нижнем белье
+в трусиках
+в купальнике видео
+засветила грудь
+засвет груди
+голая грудь
+голую грудь
+нудист
+нудизм
+нудистск
+
+# Russian: anatomy and acts
 сиськ
+сисек
+сисечк
 титьк
+титек
+письк
+писюн
+пизденк
+пиздой
+пизду
 минет
-куни
+минетик
+отсос
+отсасыва
+кунилинг
+куннилинг
 анальн
+в попку
+в попочку
 трахн
 трахат
 трахает
 трахаю
+трахал
+трахну
 трахнул
+трахаются
+потрахуш
 ебля
 ебут
-отсос
+ебутся
+ебет
+выебал
+отъебал
 дроч
+подроч
 мастурб
-шлюх
-стриптиз
-вебкам
+оргазм
+сперму на
+спермой
 камшот
-групповуха
-интим фото
-интимные фото
-слитые фото
-фетиш
-бдсм
+сквирт
+групповух
+груповух
 оргия
 оргии
-пикап видео
+оргию
+секс втроем
+жмж
+мжм
+фетиш
+бдсм
+фемдом
+куколд
+свингер
+страпон
+дилдо
+секс игрушк
+стриптиз
+стриптизерш
+лапдэнс
+приватный танец
+
+# Russian: services and models
+шлюх
+шлюшк
+шалав
+проститутк
+индивидуалк
+путана
+путаны
+путанки
+эскортниц
+эскорт услуги
+вебкам
+вебкамщиц
+вебкам модел
+содержанк
+мамочки 18
+зрелые женщины видео
+зрелые тетки
+милфа
+милфы
+
+# Russian: anime and drawn
+хентай
+хентая
+яой
+эччи
+футанари
+ахегао
+порнокомикс
+комиксы 18
 
 # Transliteration
 porno
 pornuha
+porevo
 golye
 golaya
+goliy
 seks
 erotika
 siski
+minet
+trahnul
+trahaet
+trahayut
+drochit
+shluhi
+intim foto
+sliv intim
+eblya
 
-# English
+# English: general
 porn
 xxx
 sex
+nsfw
+erotic
+lewd
 nude
 nudes
 nudity
 naked
-nsfw
-hentai
-milf
+topless
+upskirt
+downblouse
+nip slip
+leaked nudes
+leaked pics
+private pics
+onlyfans leak
+dick pics
+hot girls naked
+adult videos
+adult content
+
+# English: acts and anatomy
 boobs
+boobies
 tits
 titties
+titty
 pussy
+pussies
 blowjob
+blow job
 handjob
+hand job
+footjob
+rimjob
 deepthroat
 creampie
 gangbang
+gang bang
 bukkake
 cumshot
+facial cumshot
+threesome
+foursome
+orgy
+orgies
+masturbat
+orgasm
+jerk off
+jerking off
+jack off
+fapping
+fap tribute
+squirting
+anal sex
+anal porn
+doggystyle
+doggy style
+missionary sex
+cowgirl porn
+dildo
+fleshlight
+sex toy
+strapon
+horny
+slut
+sluts
+whore
+whores
+milf
+milfs
+cougar porn
+stepsis
+stepsister porn
+stepmom porn
+teen porn
+amateur porn
+homemade porn
+camgirl
+camgirls
+camboy
+webcam girl
+webcam show
+striptease
+stripper
+strippers
+lap dance
+pole dance nude
 fetish
 bdsm
 bondage
-striptease
-stripper
-topless
-upskirt
-camgirl
-camgirls
-erotic
-lewd
+femdom
+cuckold
+swinger
+swingers
+voyeur
+exhibitionist
+nympho
+hooker porn
+escort girls
+
+# English: drawn
+hentai
 ecchi
 futanari
+ahegao
 rule34
-dick pics
+rule 34
+r34
+doujinshi
+yaoi
+nhentai
+ehentai
+hanime
+hentaihaven
+e621
+gelbooru
+danbooru
+
+# Sites
 onlyfans
 fansly
+patreon nude
 chaturbate
 stripchat
 bongacams
+camsoda
+myfreecams
+livejasmin
+cam4
 xvideos
 xhamster
 xnxx
@@ -109,3 +327,27 @@ brazzers
 redtube
 youporn
 spankbang
+eporner
+txxx
+hclips
+beeg
+tnaflix
+youjizz
+porntrex
+motherless
+sxyprn
+hqporner
+daftsex
+pornone
+erome
+fapello
+thothub
+coomer
+javhd
+javlibrary
+missav
+porn365
+porno365
+pornolab
+порнхаб
+ксвидеос

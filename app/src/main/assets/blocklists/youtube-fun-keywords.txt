@@ -1,58 +1,240 @@
 # Built-in keywords for «YouTube: развлечения» (shared by the Android app and the PC extension).
-# Applied only on youtube.com / youtu.be (category onlyHosts). Matches the START of a word.
-# Avoid words that also name study content: урок, лекция, обзор, разбор, туториал.
+# Applied only on youtube.com / youtu.be (category onlyHosts). Matches the START of a word; ё = е.
+# Avoid words that also name study content: урок, лекция, обзор, разбор, туториал, фильм, топ 10, комедия (Грибоедов),
+# roast (recipes), troll(ey), sigma (math), let's play (guitar), дота(ция), дом 2(-х этажный),
+# угар(ный газ), стрим(ить), compilation (C++), challenge (coding), sketch (drawing), шок(олад), жесть (кровельная),
+# кухня, универ(ситет), ору(жие), реакци(я химическая), мем(ориал).
 # Keep in sync with tests: pc/test/youtube.test.js.
 
-# Russian
+# Russian: humor
 прикол
+приколы
+приколюх
 смешн
-угар
+смешар
+юмор
 ржак
 ржач
-челлендж
-реакция на
-реагирую
+ржу
+ржем
+угарные
+угарная
+угарное
+угарно
+угарчик
+угараем
+угораем
+угорел
+рофл
+жиза
 мемы
 мемас
 мемчик
-стрим
-нарезк
-пранк
-лучшие моменты
-тикток
-тик ток
-шортс
-приколы
+мемн
+мемасик
+кринж
+кринжов
+нелеп
+курьез
+ляпы
 фейл
+фейлы
+неудачники видео
+подборка приколов
+подборка фейлов
+лучшие моменты
+смешные моменты
+смешные животные
+котики
+приколы с котами
+пранк
+пранки
 розыгрыш
+разыграл
 трэш
 треш
-кринж
-мукбанг
-влог
-летсплей
-стример
-твич
-подборка приколов
+шок контент
+шокирующ
+хайп
+стендап
+стенд ап
+камеди клаб
+камеди
+комедийное шоу
+что было дальше
+женский стендап
+контакты в телефоне
+импровизация шоу
+вечерний ургант
+comment out
+звезды в африке
 
-# English
+# Russian: reactions and challenges
+реакция на
+реагирую
+реагируем
+челлендж
+челендж
+24 часа в
+24 часа на
+последний кто
+кто последний
+угадай песню
+угадай мелодию
+не засмейся
+попробуй не засмеяться
+засмеялся проиграл
+засмеялась проиграла
+
+# Russian: shorts, streams and bloggers
+шортс
+тикток
+тик ток
+тиктокер
+нарезк
+стримы
+стримчик
+стриме
+стрима
+стример
+стримерш
+твич
+влог
+влоги
+блогер
+блогеры
+мистер бист
+влад а4
+куплинов
+братишкин
+ивангай
+мелстрой
+эвелон
+один день из жизни
+что я ем за день
+распаковк
+асмр
+мукбанг
+
+# Russian: games
+летсплей
+лецплей
+прохождение игры
+полное прохождение
+геймплей
+нагибатор
+майнкрафт
+фортнайт
+роблокс
+бравл старс
+стандофф
+кс го
+кс2
+дота 2
+dota
+валорант
+пубг
+гта 5
+гта 6
+амонг ас
+скибиди
+фнаф
+хагги вагги
+поппи плейтайм
+клеш рояль
+геометри дэш
+
+# Russian: TV, series, cartoons
+сериал
+мультик
+мультфильм
+пусть говорят
+мужское женское
+битва экстрасенсов
+пацанки
+холостяк
+беременна в 16
+мама в 16
+давай поженимся
+реальные пацаны
+папины дочки
+сашатаня
+интерны
+
+# English: humor
 funny
+funniest
 prank
 pranks
-reaction to
-reacts
+prank call
 meme
 memes
-compilation
-tiktok
-shorts
-try not to laugh
+cringe
+cringey
+bloopers
+epic fail
 fails
 fail compilation
-mukbang
+funny compilation
+best compilation
+try not to laugh
+you laugh you lose
+stand up comedy
+comedy club
+comedy special
+standup comedy
+parody
+trolling
+rizz
+skibidi
+oddly satisfying
+satisfying video
+
+# English: reactions, challenges, bloggers
+reaction to
+reacts
+reacting to
+last to leave
+24 hours in
+i survived
+mrbeast
+mr beast
+beast games
 vlog
-lets play
-let's play
-stream highlights
+vlogs
+storytime
+story time
+day in my life
+what i eat in a day
+unboxing
+shopping haul
+clothing haul
+asmr
+mukbang
+tiktok
+tik tok
+shorts
 twitch
-cringe
+stream highlights
+streamer
+kick stream
+
+# English: games
+lets play
+gameplay
+speedrun
+fortnite
+minecraft
+roblox
+valorant
+pubg
+gta 5
+gta 6
+among us
+brawl stars
+fnaf
+five nights at
+poppy playtime
+huggy wuggy
+clash royale
+geometry dash

@@ -61,3 +61,21 @@ test('custom url prefix in any category blocks', () => {
   assert.equal(check('https://vk.com/clips/123', null, [c])?.categoryId, 'c');
   assert.equal(check('https://vk.com/feed', null, [c]), null);
 });
+
+test('extended youtube dictionary blocks entertainment', () => {
+  for (const t of ['Смешные котики 2026', 'Угарные моменты со стрима', 'Мистер Бист: 24 часа в бункере', 'Куплинов играет',
+    'Прохождение игры Cyberpunk', 'Майнкрафт выживание', 'Brawl Stars новый боец', 'ASMR для сна', 'Влог из Дубая',
+    'Попробуй не засмеяться', 'Что было дальше? Новый выпуск', 'Пусть говорят', 'MrBeast I Survived 100 Days',
+    'Fortnite highlights', 'Skibidi toilet 77', 'Day in my life as a student', 'Epic fail moments', 'Тикток подборка'])
+    assert.equal(video(t)?.categoryId, 'youtube-fun', t);
+});
+
+test('extended youtube dictionary leaves study videos alone', () => {
+  for (const t of ['Угарный газ: как не отравиться', 'Как стримить в OBS', 'C++ compilation process explained',
+    'Roast chicken recipe', 'Trolley problem explained', 'Sigma notation in math', "Let's play guitar: lesson 1",
+    'Дотация регионам', 'Дом 2-х этажный из бруса', 'Горе от ума — комедия Грибоедова', 'Divine Comedy lecture',
+    'Hauling a trailer safely', 'Кухня: как сделать ремонт', 'Университет Иннополис', 'Оружие Первой мировой',
+    'Химическая реакция горения', 'Мемориал Победы', 'Шоколадный торт рецепт', 'Кровельная жесть монтаж',
+    'Урок математики 5 класс', 'Курс Python с нуля', 'Как научиться рисовать скетчи', 'Математический анализ лекция 1'])
+    assert.equal(video(t), null, t);
+});

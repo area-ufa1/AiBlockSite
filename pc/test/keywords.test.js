@@ -33,3 +33,21 @@ test('bundled keywords apply only to enabled categories', () => {
   const off = DEFAULT_CATEGORIES.map((c) => ({ ...c, enabled: false }));
   assert.equal(decide({ url: google('голые'), title: null }, off, new Map(), bundledKeywords), null);
 });
+
+test('extended adult dictionary blocks common searches', () => {
+  for (const q of ['раздетая девушка', 'слив интим фото блогерши', 'шлюхи москва', 'индивидуалки рядом', 'вебкам модели',
+    'хентай манга', 'стриптиз видео', 'девушка без трусиков', 'trahnul sosedku', 'onlyfans leak', 'nhentai', 'chaturbate',
+    'stepsis', 'big boobs', 'webcam girl', 'ahegao', 'rule 34 overwatch', 'masturbation', 'горячие девушки в бикини'])
+    assert.ok(blocked(google(q)), q);
+});
+
+test('extended adult dictionary leaves everyday searches alone', () => {
+  for (const q of ['куница фото', 'попкорн рецепт', 'раздевалка в спортзале', 'путаница в документах', 'кино кончилось',
+    'заболел раком лечение', 'юрист консультация', 'java tutorial', 'Wankel engine', 'свинг в гольфе', 'дойка коров',
+    'вибратор для бетона', 'squirtle pokemon', 'Dominic Cummings', 'bottomless brunch', 'Deep Throat Watergate',
+    'видео 18 мая', 'фото 18 века', 'кончается бензин', 'Gilfoyle', 'see through walls', 'strap on helmet',
+    'Middlesex university', 'essex county', 'нагрузка на сервер', 'обнаружить вирус',
+    'голосование', 'голубые ели', 'титан металл', 'писатель Пушкин', 'минеральная вода', 'отсюда до Москвы',
+    'кунг фу', 'анализы на гормоны', 'эскорт форд', 'эскалатор', 'пицца доставка', 'тит Ливий', 'trolleybus'])
+    assert.ok(!blocked(google(q)), q);
+});
