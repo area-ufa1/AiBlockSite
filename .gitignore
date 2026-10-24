@@ -6,3 +6,7 @@ local.properties
 .kotlin/
 .superpowers/
 pc/dist/
+
+# Signing keys live in CI secrets, never in the repo.
+*.keystore
+*.jks
