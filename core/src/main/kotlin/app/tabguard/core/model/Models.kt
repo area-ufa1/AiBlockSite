@@ -12,9 +12,13 @@ data class Category(
     val enabled: Boolean,
     val keywords: List<String>,
     val domains: Set<String>,
+    /** Block when the address (without scheme and leading `www.`/`m.`) starts with one of these. */
+    val urlPrefixes: List<String> = emptyList(),
+    /** If not empty, this category's words apply only on these hosts and their subdomains. */
+    val onlyHosts: Set<String> = emptySet(),
 )
 
-enum class VerdictSource { DOMAIN, KEYWORD, CLAUDE }
+enum class VerdictSource { DOMAIN, PREFIX, KEYWORD, CLAUDE }
 
 sealed interface Verdict {
     data class Block(val categoryId: Long, val source: VerdictSource) : Verdict

@@ -56,17 +56,17 @@ class MainViewModelTest {
     @Test
     fun `state exposes categories with counts`() {
         val s = vm().await { it.categories.isNotEmpty() }
-        assertEquals("Порно", s.categories.single().category.name)
-        assertEquals(0, s.categories.single().blockCount)
+        assertEquals("Порно", s.categories.first { it.bundledList == "adult" }.category.name)
+        assertEquals(0, s.categories.first { it.bundledList == "adult" }.blockCount)
         assertEquals(ServiceStatus.RUNNING, s.serviceStatus)
     }
 
     @Test
     fun `toggleCategory persists`() {
         val vm = vm()
-        val id = vm.await { it.categories.isNotEmpty() }.categories.single().category.id
+        val id = vm.await { it.categories.isNotEmpty() }.categories.first { it.bundledList == "adult" }.category.id
         vm.toggleCategory(id, false)
-        vm.await { s -> s.categories.single().category.enabled.not() }
+        vm.await { s -> s.categories.first { it.bundledList == "adult" }.category.enabled.not() }
         assertFalse(runBlocking { repo.get(id)!!.enabled })
     }
 

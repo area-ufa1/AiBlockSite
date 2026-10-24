@@ -84,4 +84,33 @@ class LocalMatcherTest {
         repeat(1000) { assertNotNull(LocalMatcher.match(TabSnapshot("b", "rt.pornhub.com/v", "x"), listOf(big))) }
         assertTrue((System.nanoTime() - start) < 1_000_000_000L)
     }
+
+    private val youtube = Category(
+        5, "YouTube: развлечения", true, listOf("приколы", "реакция на", "funny"), emptySet(),
+        urlPrefixes = listOf("youtube.com/shorts/"), onlyHosts = setOf("youtube.com", "youtu.be"),
+    )
+
+    @Test
+    fun `shorts url is blocked by prefix`() = assertEquals(
+        Verdict.Block(5, VerdictSource.PREFIX),
+        LocalMatcher.match(TabSnapshot("b", "https://www.youtube.com/shorts/abc", null), listOf(youtube)),
+    )
+
+    @Test
+    fun `mobile shorts without scheme too`() =
+        assertNotNull(LocalMatcher.match(TabSnapshot("b", "m.youtube.com/shorts/x", null), listOf(youtube)))
+
+    @Test
+    fun `entertainment title on youtube is blocked`() = assertEquals(
+        VerdictSource.KEYWORD,
+        LocalMatcher.match(TabSnapshot("b", "m.youtube.com/watch?v=1", "Лучшие приколы 2026"), listOf(youtube))?.source,
+    )
+
+    @Test
+    fun `youtube words apply only on youtube`() =
+        assertNull(LocalMatcher.match(TabSnapshot("b", "news.ru/a", "Реакция на ставку и приколы рынка"), listOf(youtube)))
+
+    @Test
+    fun `youtube home is not blocked`() =
+        assertNull(LocalMatcher.match(TabSnapshot("b", "youtube.com", "YouTube"), listOf(youtube)))
 }

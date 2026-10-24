@@ -2,6 +2,7 @@ package app.tabguard.data
 
 import androidx.test.core.app.ApplicationProvider
 import app.tabguard.core.model.VerdictSource
+import app.tabguard.core.support.PromptKind
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -37,8 +38,8 @@ class CategoryRepositoryTest {
     @Test
     fun `seed creates enabled porn category with bundled list`() = runTest {
         val all = repo.observeWithCounts().first()
-        assertEquals(1, all.size)
-        val seed = all.single()
+        assertEquals(listOf("adult", "youtube-fun"), all.map { it.bundledList })
+        val seed = all.first()
         assertEquals("Порно", seed.category.name)
         assertTrue(seed.category.enabled)
         assertEquals("adult", seed.bundledList)
@@ -58,10 +59,10 @@ class CategoryRepositoryTest {
 
     @Test
     fun `save existing keeps enabled flag and bundled list`() = runTest {
-        val seedId = repo.observeWithCounts().first().single().category.id
+        val seedId = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         repo.setEnabled(seedId, false)
         repo.save(seedId, "Порно", "porn", "")
-        val row = repo.observeWithCounts().first().single()
+        val row = repo.observeWithCounts().first().first { it.bundledList == "adult" }
         assertEquals(false, row.category.enabled)
         assertEquals("adult", row.bundledList)
         assertEquals(listOf("porn"), row.category.keywords)
@@ -69,20 +70,21 @@ class CategoryRepositoryTest {
 
     @Test
     fun `enabledCategories merges bundled domains`() = runTest {
-        val seedId = repo.observeWithCounts().first().single().category.id
+        val seedId = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         repo.save(seedId, "Порно", "porn", "mine.com")
         assertEquals(setOf("mine.com", "pornhub.com", "xvideos.com"), repo.enabledCategories().single().domains)
     }
 
     @Test
     fun `counts are per category`() = runTest {
-        val first = repo.observeWithCounts().first().single().category.id
+        val first = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         val second = repo.save(null, "Казино", "casino", "")
         val third = repo.save(null, "Пусто", "", "")
         repo.recordBlock(first, VerdictSource.DOMAIN, 1)
         repo.recordBlock(first, VerdictSource.KEYWORD, 2)
         repo.recordBlock(second, VerdictSource.CLAUDE, 3)
-        val counts = repo.observeWithCounts().first().associate { it.category.id to it.blockCount }
+        val counts = repo.observeWithCounts().first().filter { it.bundledList != "youtube-fun" }
+            .associate { it.category.id to it.blockCount }
         assertEquals(mapOf(first to 2, second to 1, third to 0), counts)
     }
 
@@ -97,7 +99,7 @@ class CategoryRepositoryTest {
 
     @Test
     fun `disabled category excluded from enabledCategories`() = runTest {
-        val seedId = repo.observeWithCounts().first().single().category.id
+        val seedId = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         repo.setEnabled(seedId, false)
         assertTrue(repo.enabledCategories().isEmpty())
     }
@@ -107,13 +109,33 @@ class CategoryRepositoryTest {
 
     @Test
     fun `enabledCategories adds built-in keywords to the user's own`() = runTest {
-        val seedId = repo.observeWithCounts().first().single().category.id
+        val seedId = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         repo.save(seedId, "Порно", "мое слово", "")
         assertEquals(listOf("мое слово", "голые", "интим фото"), repo.enabledCategories().single().keywords)
     }
 
     @Test
     fun `built-in keywords are not shown as the user's own`() = runTest {
-        assertEquals(AppDatabase.SEED_KEYWORDS, repo.observeWithCounts().first().single().category.keywords)
+        assertEquals(AppDatabase.SEED_KEYWORDS, repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.keywords)
+    }
+
+    @Test
+    fun `new database seeds porn and a disabled youtube category`() = runTest {
+        val yt = repo.observeWithCounts().first().first { it.bundledList == "youtube-fun" }
+        assertEquals("YouTube: развлечения", yt.category.name)
+        assertEquals(false, yt.category.enabled)
+        assertEquals(listOf("youtube.com/shorts/"), yt.category.urlPrefixes)
+        assertEquals(setOf("youtube.com", "youtu.be"), yt.category.onlyHosts)
+        assertEquals(PromptKind.YOUTUBE, repo.promptKind(yt.category.id))
+    }
+
+    @Test
+    fun `saving keeps url prefixes and only-hosts unless given`() = runTest {
+        val id = repo.observeWithCounts().first().first { it.bundledList == "youtube-fun" }.category.id
+        repo.save(id, "YouTube: развлечения", "мое", "")
+        assertEquals(listOf("youtube.com/shorts/"), repo.get(id)!!.urlPrefixes)
+        repo.save(id, "YouTube: развлечения", "мое", "", prefixesText = "https://www.vk.com/clips\n", onlyHostsText = "youtube.com")
+        assertEquals(listOf("vk.com/clips"), repo.get(id)!!.urlPrefixes)
+        assertEquals(setOf("youtube.com"), repo.get(id)!!.onlyHosts)
     }
 }

@@ -43,7 +43,7 @@ class BlockActionTest {
 
     @Test
     fun `perform records event, copies prompt, opens claude url`() = runBlocking {
-        val id = repo.observeWithCounts().first().single().category.id
+        val id = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         action.perform(TabSnapshot("b", "x.com", "Горячее видео"), Verdict.Block(id, VerdictSource.KEYWORD))
 
         val started = shadowOf(app).nextStartedActivity
@@ -52,7 +52,7 @@ class BlockActionTest {
         assertTrue(started.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
         val clip = app.getSystemService(ClipboardManager::class.java).primaryClip!!.getItemAt(0).text.toString()
         assertTrue(clip.contains("«Порно»") && clip.contains("Горячее видео"))
-        assertEquals(1, repo.observeWithCounts().first().single().blockCount)
+        assertEquals(1, repo.observeWithCounts().first().first { it.bundledList == "adult" }.blockCount)
     }
 
     @Test
@@ -64,7 +64,7 @@ class BlockActionTest {
 
     @Test
     fun `perform presses back before opening claude`() = runBlocking {
-        val id = repo.observeWithCounts().first().single().category.id
+        val id = repo.observeWithCounts().first().first { it.bundledList == "adult" }.category.id
         action.perform(TabSnapshot("b", "x.com", "t"), Verdict.Block(id, VerdictSource.DOMAIN))
         assertEquals(listOf("back"), events)
         assertTrue(shadowOf(app).nextStartedActivity != null)

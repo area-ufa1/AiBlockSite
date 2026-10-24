@@ -31,7 +31,7 @@ class BlockAction(
     suspend fun perform(tab: TabSnapshot, block: Verdict.Block) {
         val category = repository.get(block.categoryId) ?: return
         repository.recordBlock(category.id, block.source, clock())
-        val prompt = SupportPrompt.build(tab, category.name)
+        val prompt = SupportPrompt.build(tab, category.name, repository.promptKind(category.id))
         withContext(mainDispatcher) {
             goBack()
             val clipboard = context.getSystemService(ClipboardManager::class.java)

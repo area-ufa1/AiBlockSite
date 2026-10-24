@@ -1,5 +1,6 @@
 package app.tabguard.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -17,6 +18,10 @@ data class CategoryEntity(
     val domains: String,
     /** Name of a file in assets/blocklists, without extension. */
     val bundledList: String?,
+    /** One normalized address prefix per line (`youtube.com/shorts/`). */
+    @ColumnInfo(defaultValue = "") val urlPrefixes: String = "",
+    /** One host per line; if any, this category's words apply only there. */
+    @ColumnInfo(defaultValue = "") val onlyHosts: String = "",
 )
 
 @Entity(

@@ -7,7 +7,10 @@ import app.tabguard.core.model.VerdictSource
 import app.tabguard.core.text.extractHost
 import app.tabguard.core.text.tokenize
 
-/** On-device matching by category domains and keywords. [Category.domains] must hold normalized hosts. */
+/**
+ * On-device matching: domains, then address prefixes, then keywords (scoped by [Category.onlyHosts]).
+ * [Category.domains] must hold normalized hosts.
+ */
 object LocalMatcher {
     val ALLOWED_HOSTS = setOf("claude.ai", "anthropic.com")
     const val OWN_PACKAGE = "app.tabguard"
@@ -26,12 +29,23 @@ object LocalMatcher {
             enabled.firstOrNull { c -> suffixes.any(c.domains::contains) }
                 ?.let { return Verdict.Block(it.id, VerdictSource.DOMAIN) }
         }
+        tab.url?.let(::normalizeForPrefix)?.let { address ->
+            enabled.firstOrNull { c -> c.urlPrefixes.any { p -> p.isNotBlank() && address.startsWith(normalizeForPrefix(p)) } }
+                ?.let { return Verdict.Block(it.id, VerdictSource.PREFIX) }
+        }
         val texts = listOfNotNull(tab.title, tab.url).map(::tokenize)
-        enabled.firstOrNull { c ->
+        enabled.filter { c -> c.onlyHosts.isEmpty() || (host != null && c.onlyHosts.any { host.isWithin(it) }) }.firstOrNull { c ->
             c.keywords.map(::tokenize).filter { it.isNotEmpty() }.any { kw -> texts.any { it.containsPrefixSequence(kw) } }
         }?.let { return Verdict.Block(it.id, VerdictSource.KEYWORD) }
         return null
     }
+
+    /** Address without scheme and leading `www.`/`m.`, lowercased: `youtube.com/shorts/x`. */
+    fun normalizeForPrefix(url: String): String =
+        url.trim().lowercase().replace(SCHEME, "").replace(MOBILE_OR_WWW, "")
+
+    private val SCHEME = Regex("^[a-z][a-z0-9+.-]*://")
+    private val MOBILE_OR_WWW = Regex("^(www\\.|m\\.)")
 
     /** "a.b.com" → ["a.b.com", "b.com", "com"]. */
     private fun String.suffixes(): List<String> =

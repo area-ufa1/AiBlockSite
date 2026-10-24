@@ -20,4 +20,10 @@ class SupportPromptTest {
     @Test
     fun `claude url encodes spaces and cyrillic`() =
         assertEquals("https://claude.ai/new?q=%D0%B0%20b", SupportPrompt.claudeUrl("а b"))
+
+    @Test
+    fun `youtube prompt talks about the endless feed`() {
+        val p = SupportPrompt.build(TabSnapshot("b", "youtube.com/shorts/x", null), "YouTube: развлечения", PromptKind.YOUTUBE)
+        assertTrue(p.startsWith("Я только что чуть не залип в развлекательный YouTube: «youtube.com/shorts/x»."))
+    }
 }

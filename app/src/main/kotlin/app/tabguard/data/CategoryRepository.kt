@@ -1,7 +1,9 @@
 package app.tabguard.data
 
 import app.tabguard.core.model.Category
+import app.tabguard.core.match.LocalMatcher
 import app.tabguard.core.model.VerdictSource
+import app.tabguard.core.support.PromptKind
 import app.tabguard.core.text.extractHost
 import app.tabguard.core.text.normalize
 import kotlinx.coroutines.flow.Flow
@@ -29,17 +31,43 @@ class CategoryRepository(private val db: AppDatabase, private val lists: Bundled
 
     suspend fun get(id: Long): Category? = dao.get(id)?.toModel()
 
-    suspend fun save(id: Long?, name: String, keywordsText: String, domainsText: String): Long {
+    /** `prefixesText`/`onlyHostsText` = null keeps the stored value. */
+    suspend fun save(
+        id: Long?,
+        name: String,
+        keywordsText: String,
+        domainsText: String,
+        prefixesText: String? = null,
+        onlyHostsText: String? = null,
+    ): Long {
         val keywords = parseList(keywordsText).joinToString("\n")
         val domains = parseList(domainsText).mapNotNull(::extractHost).distinct().joinToString("\n")
+        val prefixes = prefixesText?.let { t ->
+            t.split('\n', ',').map(LocalMatcher::normalizeForPrefix).filter { it.isNotEmpty() }.distinct().joinToString("\n")
+        }
+        val hosts = onlyHostsText?.let { t -> parseList(t).mapNotNull(::extractHost).distinct().joinToString("\n") }
         val existing = id?.let { dao.get(it) }
         return if (existing == null) {
-            dao.insert(CategoryEntity(name = name.trim(), enabled = true, keywords = keywords, domains = domains, bundledList = null))
+            dao.insert(
+                CategoryEntity(
+                    name = name.trim(), enabled = true, keywords = keywords, domains = domains, bundledList = null,
+                    urlPrefixes = prefixes.orEmpty(), onlyHosts = hosts.orEmpty(),
+                ),
+            )
         } else {
-            dao.update(existing.copy(name = name.trim(), keywords = keywords, domains = domains))
+            dao.update(
+                existing.copy(
+                    name = name.trim(), keywords = keywords, domains = domains,
+                    urlPrefixes = prefixes ?: existing.urlPrefixes, onlyHosts = hosts ?: existing.onlyHosts,
+                ),
+            )
             existing.id
         }
     }
+
+    /** Which supportive text a block in this category uses. */
+    suspend fun promptKind(id: Long): PromptKind =
+        if (dao.get(id)?.bundledList == "youtube-fun") PromptKind.YOUTUBE else PromptKind.ADULT
 
     suspend fun setEnabled(id: Long, enabled: Boolean) = dao.setEnabled(id, enabled)
 
@@ -54,6 +82,8 @@ class CategoryRepository(private val db: AppDatabase, private val lists: Bundled
         enabled = enabled,
         keywords = keywords.lines().filter { it.isNotEmpty() },
         domains = domains.lines().filter { it.isNotEmpty() }.toSet(),
+        urlPrefixes = urlPrefixes.lines().filter { it.isNotEmpty() },
+        onlyHosts = onlyHosts.lines().filter { it.isNotEmpty() }.toSet(),
     )
 
     private fun parseList(text: String): List<String> =
