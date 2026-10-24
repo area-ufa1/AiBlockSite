@@ -148,9 +148,13 @@ class MainActivity : ComponentActivity() {
                 val bundledCount by produceState(0, existing?.bundledList) {
                     value = existing?.bundledList?.let { name -> withContext(Dispatchers.IO) { container.lists.domains(name).size } } ?: 0
                 }
+                val bundledWords by produceState(emptyList<String>(), existing?.bundledList) {
+                    value = existing?.bundledList?.let { name -> withContext(Dispatchers.IO) { container.lists.keywords(name) } } ?: emptyList()
+                }
                 CategoryEditScreen(
                     existing = existing,
                     bundledCount = bundledCount,
+                    bundledWords = bundledWords,
                     onSave = { name, keywords, domains, prefixes, onlyHosts ->
                         vm.saveCategory(id, name, keywords, domains, prefixes, onlyHosts); nav.popBackStack()
                     },

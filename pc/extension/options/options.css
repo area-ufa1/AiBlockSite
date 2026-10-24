@@ -49,3 +49,7 @@ dialog::backdrop { background: rgba(20, 22, 40, .45); }
 #pin-input { font-size: 20px; letter-spacing: 6px; width: 180px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; }
 .choice { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; font-weight: 400; }
 .choice input { margin-top: 4px; }
+
+.bundled { border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin: 4px 0 12px; }
+.bundled summary { cursor: pointer; font-weight: 600; }
+.bundled-words { font-size: 13px; line-height: 1.6; max-height: 240px; overflow-y: auto; overflow-wrap: anywhere; margin: 8px 0 0; }

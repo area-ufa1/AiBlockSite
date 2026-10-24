@@ -25,7 +25,8 @@
     <string name="edit_name">Название</string>
     <string name="edit_keywords">Слова (по одному в строке)</string>
     <string name="edit_domains">Домены (по одному в строке)</string>
-    <string name="edit_bundled">+ встроенный список (%1$d доменов)</string>
+    <string name="edit_bundled">Встроенный словарь: %1$d слов и фраз, %2$d сайтов ▾</string>
+    <string name="edit_bundled_hint">Эти слова и сайты встроены и работают всегда, когда категория включена. Свои добавляйте в поля выше.</string>
     <string name="edit_save">Сохранить</string>
     <string name="edit_delete">Удалить</string>
     <string name="edit_delete_confirm">Удалить категорию «%1$s» вместе со статистикой?</string>

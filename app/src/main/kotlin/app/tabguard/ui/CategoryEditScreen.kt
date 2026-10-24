@@ -36,6 +36,7 @@ import app.tabguard.data.CategoryWithCount
 fun CategoryEditScreen(
     existing: CategoryWithCount?,
     bundledCount: Int,
+    bundledWords: List<String>,
     onSave: (name: String, keywords: String, domains: String, prefixes: String, onlyHosts: String) -> Unit,
     onDelete: () -> Unit,
     onBack: () -> Unit,
@@ -65,7 +66,14 @@ fun CategoryEditScreen(
             OutlinedTextField(prefixes, { prefixes = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.edit_prefixes)) })
             OutlinedTextField(onlyHosts, { onlyHosts = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.edit_only_hosts)) }, singleLine = true)
             if (existing?.bundledList != null) {
-                Text(stringResource(R.string.edit_bundled, bundledCount), style = MaterialTheme.typography.bodySmall)
+                var showWords by rememberSaveable { mutableStateOf(false) }
+                TextButton(onClick = { showWords = !showWords }) {
+                    Text(stringResource(R.string.edit_bundled, bundledWords.size, bundledCount))
+                }
+                if (showWords) {
+                    Text(stringResource(R.string.edit_bundled_hint), style = MaterialTheme.typography.bodySmall)
+                    Text(bundledWords.joinToString(", "), style = MaterialTheme.typography.bodySmall)
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { onSave(name, keywords, domains, prefixes, onlyHosts) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.edit_save)) }

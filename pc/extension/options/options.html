@@ -50,7 +50,11 @@
       <label>Слова только на сайтах <span class="hint">через запятую; пусто — на всех сайтах</span>
         <input id="only-hosts" type="text" autocomplete="off">
       </label>
-      <p id="bundled" class="hint" hidden></p>
+      <details id="bundled" class="bundled" hidden>
+        <summary></summary>
+        <p class="hint">Эти слова и сайты встроены и работают всегда, когда категория включена. Свои добавляйте в поля выше.</p>
+        <p id="bundled-words" class="bundled-words"></p>
+      </details>
       <div class="buttons">
         <button id="save" class="primary">Сохранить</button>
         <button id="cancel">Отмена</button>

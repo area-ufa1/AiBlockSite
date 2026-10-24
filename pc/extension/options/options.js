@@ -57,8 +57,13 @@ async function openEditor(category) {
   $('delete').hidden = !category;
   $('bundled').hidden = true;
   if (category?.bundledList) {
-    const size = (await bundled.get(category.bundledList)).size;
-    $('bundled').textContent = `+ встроенный список (${size.toLocaleString('ru-RU')} доменов)`;
+    const domains = (await bundled.get(category.bundledList)).size;
+    const words = [...(await bundled.get(`${category.bundledList}-keywords`))];
+    const parts = [`${words.length.toLocaleString('ru-RU')} слов и фраз`];
+    if (domains > 0) parts.push(`${domains.toLocaleString('ru-RU')} сайтов`);
+    $('bundled').querySelector('summary').textContent = `Встроенный словарь: ${parts.join(' + ')}`;
+    $('bundled-words').textContent = words.join(', ');
+    $('bundled').open = false;
     $('bundled').hidden = false;
   }
   updateSave();

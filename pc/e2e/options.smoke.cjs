@@ -39,4 +39,12 @@ module.exports = async ({ context, extId, open, waitFor, check, CLAUDE }) => {
     if (!(await page.isDisabled('#save'))) throw new Error('save enabled');
     await page.click('#cancel');
   });
+
+  await check('built-in words are visible in the category editor', async () => {
+    await page.locator('.category', { hasText: 'Порно' }).click({ position: { x: 20, y: 20 } });
+    await page.locator('#bundled summary', { hasText: 'Встроенный словарь: 326' }).waitFor({ timeout: 5000 });
+    await page.click('#bundled summary');
+    await page.locator('#bundled-words', { hasText: 'раздетая' }).waitFor({ timeout: 5000 });
+    await page.click('#cancel');
+  });
 };
