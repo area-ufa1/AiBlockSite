@@ -49,10 +49,10 @@ class SettingsStore(private val context: Context) {
 
     suspend fun saveLock(s: LockState) {
         context.dataStore.edit { p ->
-            if (s.mode == null) p.remove(lockMode) else p[lockMode] = s.mode.name
+            s.mode.let { if (it == null) p.remove(lockMode) else p[lockMode] = it.name }
             p[lockPause] = s.pauseMinutes
-            if (s.pinHash == null) p.remove(lockPinHash) else p[lockPinHash] = s.pinHash
-            if (s.salt == null) p.remove(lockSalt) else p[lockSalt] = s.salt
+            s.pinHash.let { if (it == null) p.remove(lockPinHash) else p[lockPinHash] = it }
+            s.salt.let { if (it == null) p.remove(lockSalt) else p[lockSalt] = it }
             p[lockCountdown] = s.countdownStartedAt ?: -1
             p[lockUnlockedUntil] = s.unlockedUntil
             p[lockFailed] = s.failedAttempts

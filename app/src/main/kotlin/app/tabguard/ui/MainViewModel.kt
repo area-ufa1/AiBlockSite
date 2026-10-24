@@ -69,7 +69,8 @@ class MainViewModel(
         combine(testStatus, lockFlow, unlockRequested, pinError) { a, b, c, d -> listOf(a, b, c, d) },
     ) { categories, claudeEnabled, lastError, (service, installed), rest ->
         @Suppress("UNCHECKED_CAST")
-        val (lock, t) = rest[1] as Pair<LockState, Long>
+        val lockAt = rest[1] as Pair<LockState, Long>
+        val (lock, t) = lockAt
         val open = Lock.isUnlocked(lock, t)
         MainState(
             categories = categories,
