@@ -35,6 +35,7 @@ class TabGuardAccessibilityService : AccessibilityService() {
     private var browsers: Set<String> = emptySet()
     private var lock: StateFlow<LockState>? = null
     private var lastToastAt = 0L
+    private var lastProtectedAt = 0L
 
     override fun onServiceConnected() {
         running = true
@@ -73,7 +74,10 @@ class TabGuardAccessibilityService : AccessibilityService() {
         val now = System.currentTimeMillis()
         if (state.mode == null || Lock.isUnlocked(Lock.settle(state, now), now)) return
         val root = rootInActiveWindow ?: return
-        if (!ProtectedScreens.isProtected(pkg, AccessibilityUiNode(root))) return
+        // The "Force stop?" dialog doesn't name the app: it counts right after a protected screen.
+        val recent = now - lastProtectedAt < 5_000
+        if (!ProtectedScreens.isProtected(pkg, AccessibilityUiNode(root), recent)) return
+        lastProtectedAt = now
         performGlobalAction(GLOBAL_ACTION_BACK)
         if (now - lastToastAt > 3_000) {
             lastToastAt = now

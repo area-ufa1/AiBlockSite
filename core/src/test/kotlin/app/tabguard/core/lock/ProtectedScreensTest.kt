@@ -68,4 +68,29 @@ class ProtectedScreensTest {
     @Test fun `browser page with the name is not protected`() = assertFalse(
         ProtectedScreens.isProtected("com.android.chrome", screen(text("Страж вкладок"), text("Удалить", "android.widget.Button"))),
     )
+
+    private fun forceStopDialog() = screen(
+        text("Остановить принудительно?"), text("Это может привести к ошибкам в работе приложения."),
+        text("Отмена", "android.widget.Button"), text("ОК", "android.widget.Button"),
+    )
+
+    @Test fun `force stop confirmation right after a protected screen is protected`() =
+        assertTrue(ProtectedScreens.isProtected(settings, forceStopDialog(), recentlyProtected = true))
+
+    @Test fun `force stop confirmation for another app is not protected`() =
+        assertFalse(ProtectedScreens.isProtected(settings, forceStopDialog(), recentlyProtected = false))
+
+    @Test fun `english accessibility list with mouse keys switch is not protected`() = assertFalse(
+        ProtectedScreens.isProtected(settings, screen(
+            text("Accessibility"), text("Страж вкладок"), text("Off"),
+            FakeNode(children = listOf(text("Mouse keys"), FakeNode(className = "android.widget.Switch"))),
+        )),
+    )
+
+    @Test fun `english service page is protected`() = assertTrue(
+        ProtectedScreens.isProtected(settings, screen(
+            text("Страж вкладок"),
+            FakeNode(children = listOf(text("Use Страж вкладок"), FakeNode(className = "android.widget.Switch"))),
+        )),
+    )
 }

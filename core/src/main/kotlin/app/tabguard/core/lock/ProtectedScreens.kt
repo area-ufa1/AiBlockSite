@@ -12,11 +12,15 @@ object ProtectedScreens {
 
     private val INSTALLERS = setOf("com.google.android.packageinstaller", "com.android.packageinstaller")
     private val ACTIONS = setOf("остановить", "принудительно остановить", "force stop", "удалить", "uninstall", "отключить", "disable")
-    private val TOGGLE_HINTS = listOf("использовать", "use ", "быстрое включение", "shortcut")
+    private val TOGGLE_HINTS = listOf("использовать", "\\buse\\b", "быстрое включение", "shortcut").map(::Regex)
     private val UNINSTALL_HINTS = listOf("удал", "uninstall")
     private const val MAX_NODES = 3000
 
-    fun isProtected(packageName: String, root: UiNode): Boolean {
+    /** Confirmation dialogs ("Force stop?") don't name the app; they count only right after a protected screen. */
+    private val CONFIRM_HINTS = listOf("остановить", "force stop", "отключить", "turn off", "удалить", "uninstall")
+
+    /** [recentlyProtected]: a protected screen of the same settings app was left a moment ago. */
+    fun isProtected(packageName: String, root: UiNode, recentlyProtected: Boolean = false): Boolean {
         val installer = packageName in INSTALLERS
         val settings = packageName == "com.android.settings" || packageName.endsWith(".settings")
         if (!installer && !settings) return false
@@ -28,10 +32,11 @@ object ProtectedScreens {
         if (installer) {
             return texts.any { it.contains(APP_NAME) } && lower.any { t -> UNINSTALL_HINTS.any { t.contains(it) } }
         }
+        if (recentlyProtected && lower.any { t -> CONFIRM_HINTS.any { t.contains(it) } }) return true
         if (texts.none { it == APP_NAME }) return false
         if (lower.any { it in ACTIONS }) return true
         val hasSwitch = nodes.any { it.className?.contains("Switch") == true }
-        return hasSwitch && lower.any { t -> TOGGLE_HINTS.any { t.contains(it) } }
+        return hasSwitch && lower.any { t -> TOGGLE_HINTS.any { it.containsMatchIn(t) } }
     }
 
     private fun flatten(root: UiNode): List<UiNode> {

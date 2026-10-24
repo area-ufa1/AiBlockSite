@@ -49,6 +49,13 @@ export function createStore(area) {
 
     saveLock: (lock) => serial(() => area.set({ lock })),
 
+    /** Mode, pause length or PIN: free on first setup, otherwise only while changes are open. */
+    setMode: (next, now = Date.now()) => serial(async () => {
+      const current = await readLock(now);
+      if (current.mode !== null && !isUnlocked(current, now)) throw new Error('locked');
+      await area.set({ lock: next });
+    }),
+
     /** `prefixesText`/`onlyHostsText` = null keeps the stored value. */
     saveCategory: (id, name, keywordsText, domainsText, prefixesText = null, onlyHostsText = null, now = Date.now()) => serial(async () => {
       const { categories } = await read();

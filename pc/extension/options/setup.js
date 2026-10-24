@@ -50,7 +50,7 @@ $('wizard').addEventListener('submit', async (e) => {
     for (const [id, box] of [['porn', 'cat-porn'], ['youtube-fun', 'cat-youtube']]) {
       if (categories.some((c) => c.id === id)) await store.setEnabled(id, $(box).checked);
     }
-    await store.saveLock(next);
+    await store.setMode(next);
     $('wizard').hidden = true;
     $('done').hidden = false;
   } catch (err) {

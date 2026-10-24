@@ -134,3 +134,12 @@ test('saveCategory sets url prefixes and only-hosts when given', async () => {
   const c = (await store.getState()).categories.find((x) => x.id === id);
   assert.deepEqual([c.urlPrefixes, c.onlyHosts], [['vk.com/clips'], ['vk.com']]);
 });
+
+test('changing the protection mode is refused once the window has closed', async () => {
+  const { initialLockState, setPauseMode } = await import('../extension/src/core/lock.js');
+  const store = createStore(fakeArea());
+  await store.setMode(setPauseMode(initialLockState(), 30), 0); // first setup: always allowed
+  const weaker = setPauseMode(await store.getLock(0), 5);
+  await assert.rejects(store.setMode(weaker, 60_000), /locked/);
+  assert.equal((await store.getLock(60_000)).pauseMinutes, 30);
+});
