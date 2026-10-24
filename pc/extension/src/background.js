@@ -9,6 +9,7 @@ import { createBundledLoader } from './bundled.js';
 const store = createStore(chrome.storage.local);
 const bundled = createBundledLoader((name) =>
   fetch(chrome.runtime.getURL(`blocklists/${name}.txt`)).then((r) => {
+    if (r.status === 404) return ''; // category without such a list: cache the empty result
     if (!r.ok) throw new Error(`blocklist ${name}: ${r.status}`);
     return r.text();
   }));

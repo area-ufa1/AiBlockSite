@@ -19,6 +19,11 @@ function containsPrefixSequence(tokens, kw) {
   return false;
 }
 
+/** Address without scheme and leading `www.`/`m.`, lowercased: `youtube.com/shorts/x`. */
+export function normalizeForPrefix(url) {
+  return url.trim().toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, '').replace(/^(www\.|m\.)/, '');
+}
+
 export function isAllowlisted(url) {
   const host = url ? extractHost(url) : null;
   return host !== null && ALLOWED_HOSTS.some((d) => isWithin(host, d));
@@ -28,7 +33,9 @@ export function isAllowlisted(url) {
  * First enabled category the tab falls under: domains of all categories first, then keywords.
  * `category.domains` and the bundled sets must hold normalized hosts; `bundledKeywords` maps a
  * category's `bundledList` to built-in words that apply on top of the user's own.
- * @returns {{categoryId: string, categoryName: string, source: 'domain'|'keyword'} | null}
+ * Order: domains, then address prefixes (`urlPrefixes`), then words; a category with
+ * `onlyHosts` applies its words only on those hosts and their subdomains.
+ * @returns {{categoryId: string, categoryName: string, source: 'domain'|'prefix'|'keyword'} | null}
  */
 export function matchTab(tab, categories, bundled, bundledKeywords = new Map()) {
   const enabled = categories.filter((c) => c.enabled);
@@ -44,8 +51,17 @@ export function matchTab(tab, categories, bundled, bundledKeywords = new Map()) 
     }
   }
 
+  if (tab.url) {
+    const address = normalizeForPrefix(tab.url);
+    for (const c of enabled) {
+      if ((c.urlPrefixes ?? []).some((p) => p && address.startsWith(normalizeForPrefix(p)))) return result(c, 'prefix');
+    }
+  }
+
   const texts = [tab.title, tab.url].filter((t) => t).map(tokenize);
   for (const c of enabled) {
+    const only = c.onlyHosts ?? [];
+    if (only.length > 0 && !(host !== null && only.some((d) => isWithin(host, d)))) continue;
     const builtIn = (c.bundledList && bundledKeywords.get(c.bundledList)) || [];
     const keywords = [...c.keywords, ...builtIn].map(tokenize).filter((kw) => kw.length > 0);
     if (keywords.some((kw) => texts.some((tokens) => containsPrefixSequence(tokens, kw)))) return result(c, 'keyword');

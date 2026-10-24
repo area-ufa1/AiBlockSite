@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { DEFAULT_CATEGORIES, parseKeywords, parseDomains } from '../extension/src/core/categories.js';
 
 test('default category is porn with bundled list', () => {
-  assert.equal(DEFAULT_CATEGORIES.length, 1);
+  assert.deepEqual(DEFAULT_CATEGORIES.map((c) => c.id), ['porn', 'youtube-fun']);
   const c = DEFAULT_CATEGORIES[0];
   assert.deepEqual([c.id, c.name, c.enabled, c.bundledList], ['porn', 'Порно', true, 'adult']);
   assert.deepEqual(c.keywords, ['порно', 'porn', 'xxx', 'секс', 'sex', 'хентай', 'hentai', 'nsfw', 'onlyfans', 'эротика']);

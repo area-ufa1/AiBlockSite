@@ -27,7 +27,8 @@ test('first run seeds default category', async () => {
 test('existing categories are not reseeded', async () => {
   const mine = { id: 'a', name: 'Моя', enabled: true, keywords: ['x'], domains: [], bundledList: null };
   const state = await createStore(fakeArea({ categories: [mine], stats: { a: 3 } })).getState();
-  assert.deepEqual(state.categories, [mine]);
+  assert.deepEqual(state.categories[0], mine);
+  assert.deepEqual(state.categories.map((c) => c.id), ['a', 'youtube-fun']); // deleted «Порно» is not re-added
   assert.deepEqual(state.stats, { a: 3 });
 });
 
@@ -35,7 +36,7 @@ test('saveCategory creates a new enabled category with parsed input', async () =
   const store = createStore(fakeArea());
   const id = await store.saveCategory(null, '  Казино ', 'Casino,\n\nСтавки', 'https://www.Bet.com/x');
   const c = (await store.getState()).categories.find((x) => x.id === id);
-  assert.deepEqual({ ...c, id: undefined }, { id: undefined, name: 'Казино', enabled: true, keywords: ['casino', 'ставки'], domains: ['bet.com'], bundledList: null });
+  assert.deepEqual({ ...c, id: undefined }, { id: undefined, name: 'Казино', enabled: true, keywords: ['casino', 'ставки'], domains: ['bet.com'], bundledList: null, urlPrefixes: [], onlyHosts: [] });
 });
 
 test('saveCategory keeps enabled and bundledList of existing', async () => {
@@ -62,6 +63,22 @@ test('deleteCategory removes its stats', async () => {
   await store.incrementStat('porn');
   await store.deleteCategory('porn');
   const state = await store.getState();
-  assert.deepEqual(state.categories, []);
+  assert.deepEqual(state.categories.map((c) => c.id), ['youtube-fun']);
   assert.deepEqual(state.stats, {});
+});
+
+test('existing install gains youtube category disabled', async () => {
+  const mine = { id: 'porn', name: 'Порно', enabled: true, keywords: ['мое'], domains: [], bundledList: 'adult' };
+  const area = fakeArea({ categories: [mine], stats: { porn: 5 } });
+  const state = await createStore(area).getState();
+  assert.deepEqual(state.categories.map((c) => [c.id, c.enabled]), [['porn', true], ['youtube-fun', false]]);
+  assert.deepEqual(state.categories[0].keywords, ['мое']);
+  assert.deepEqual(state.stats, { porn: 5 });
+});
+
+test('a deleted built-in category is not added back', async () => {
+  const store = createStore(fakeArea());
+  await store.getState();
+  await store.deleteCategory('youtube-fun');
+  assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['porn']);
 });

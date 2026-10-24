@@ -36,7 +36,9 @@ async function open(page, url) {
   await context.route('**/*', (route) => {
     const url = route.request().url();
     if (!/^https?:/.test(url)) return route.continue();
-    const title = url.includes('/titled/') ? 'Горячее порно видео' : 'Обычная страница';
+    const title = url.includes('/titled/') ? 'Горячее порно видео'
+      : url.includes('youtube.com/watch?v=study') ? 'Лекция по физике - YouTube'
+      : 'Обычная страница';
     route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: `<title>${title}</title><p>ok</p>` });
   });
   let failed = false;
@@ -78,7 +80,7 @@ async function open(page, url) {
       if (stats?.porn !== 2) throw new Error(JSON.stringify(stats));
     });
 
-    for (const name of ['options.smoke.cjs', 'back.smoke.cjs', 'search.smoke.cjs']) {
+    for (const name of ['options.smoke.cjs', 'back.smoke.cjs', 'search.smoke.cjs', 'youtube.smoke.cjs']) {
       const extra = path.join(__dirname, name);
       if (fs.existsSync(extra)) await require(extra)(globalThis.smoke);
     }

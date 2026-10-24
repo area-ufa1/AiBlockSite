@@ -1,4 +1,5 @@
 import { extractHost, normalize } from './text.js';
+import { normalizeForPrefix } from './matcher.js';
 
 export const DEFAULT_CATEGORIES = Object.freeze([
   Object.freeze({
@@ -8,6 +9,18 @@ export const DEFAULT_CATEGORIES = Object.freeze([
     keywords: ['порно', 'porn', 'xxx', 'секс', 'sex', 'хентай', 'hentai', 'nsfw', 'onlyfans', 'эротика'],
     domains: [],
     bundledList: 'adult',
+    urlPrefixes: [],
+    onlyHosts: [],
+  }),
+  Object.freeze({
+    id: 'youtube-fun',
+    name: 'YouTube: развлечения',
+    enabled: false,
+    keywords: [],
+    domains: [],
+    bundledList: 'youtube-fun',
+    urlPrefixes: ['youtube.com/shorts/'],
+    onlyHosts: ['youtube.com', 'youtu.be'],
   }),
 ]);
 
@@ -30,4 +43,9 @@ function toAscii(host) {
   } catch {
     return host;
   }
+}
+
+/** Address prefixes typed by the user (`https://www.vk.com/clips` → `vk.com/clips`); blanks dropped. */
+export function parseUrlPrefixes(text) {
+  return [...new Set(text.split(/[\n,]/).map((l) => normalizeForPrefix(l)).filter((l) => l.length > 0))];
 }

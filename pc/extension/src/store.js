@@ -12,14 +12,21 @@ export function createStore(area) {
     return run;
   };
 
+  /**
+   * Built-in categories are seeded once each (`seeded` remembers which): a new install gets all,
+   * an older install gains the ones added later, and a category the user deleted is not re-added.
+   */
   async function read() {
-    const { categories, stats } = await area.get(['categories', 'stats']);
-    if (categories === undefined) {
-      const seeded = structuredClone(DEFAULT_CATEGORIES);
-      await area.set({ categories: seeded });
-      return { categories: seeded, stats: stats ?? {} };
+    const { categories, stats, seeded } = await area.get(['categories', 'stats', 'seeded']);
+    // Installs from before `seeded` existed were seeded with «Порно» only.
+    const known = new Set(seeded ?? (categories === undefined ? [] : ['porn']));
+    const missing = DEFAULT_CATEGORIES.filter((d) => !known.has(d.id));
+    let list = categories ?? [];
+    if (missing.length > 0 || seeded === undefined) {
+      list = [...list, ...structuredClone(missing).filter((d) => !list.some((c) => c.id === d.id))];
+      await area.set({ categories: list, seeded: DEFAULT_CATEGORIES.map((d) => d.id) });
     }
-    return { categories, stats: stats ?? {} };
+    return { categories: list, stats: stats ?? {} };
   }
 
   return {
@@ -34,7 +41,7 @@ export function createStore(area) {
         await area.set({ categories });
         return existing.id;
       }
-      const created = { id: crypto.randomUUID(), enabled: true, bundledList: null, ...fields };
+      const created = { id: crypto.randomUUID(), enabled: true, bundledList: null, urlPrefixes: [], onlyHosts: [], ...fields };
       await area.set({ categories: [...categories, created] });
       return created.id;
     }),

@@ -1,0 +1,58 @@
+# Built-in keywords for «YouTube: развлечения» (shared by the Android app and the PC extension).
+# Applied only on youtube.com / youtu.be (category onlyHosts). Matches the START of a word.
+# Avoid words that also name study content: урок, лекция, обзор, разбор, туториал.
+# Keep in sync with tests: pc/test/youtube.test.js.
+
+# Russian
+прикол
+смешн
+угар
+ржак
+ржач
+челлендж
+реакция на
+реагирую
+мемы
+мемас
+мемчик
+стрим
+нарезк
+пранк
+лучшие моменты
+тикток
+тик ток
+шортс
+приколы
+фейл
+розыгрыш
+трэш
+треш
+кринж
+мукбанг
+влог
+летсплей
+стример
+твич
+подборка приколов
+
+# English
+funny
+prank
+pranks
+reaction to
+reacts
+meme
+memes
+compilation
+tiktok
+shorts
+try not to laugh
+fails
+fail compilation
+mukbang
+vlog
+lets play
+let's play
+stream highlights
+twitch
+cringe

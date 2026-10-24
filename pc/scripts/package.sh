@@ -8,7 +8,7 @@ rm -rf "$DIST"
 mkdir -p "$DIST/TabGuard/blocklists"
 cp -r "$ROOT/pc/extension/." "$DIST/TabGuard/"
 cp "$ROOT/app/src/main/assets/blocklists/adult.txt" "$DIST/TabGuard/blocklists/adult.txt"
-cp "$ROOT/app/src/main/assets/blocklists/adult-keywords.txt" "$DIST/TabGuard/blocklists/adult-keywords.txt"
+cp "$ROOT"/app/src/main/assets/blocklists/*-keywords.txt "$DIST/TabGuard/blocklists/"
 for f in install.bat УСТАНОВКА.txt; do
   if [ -f "$ROOT/pc/$f" ]; then cp "$ROOT/pc/$f" "$DIST/$f"; fi
 done

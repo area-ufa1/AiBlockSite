@@ -12,7 +12,9 @@ export function decide(tab, categories, bundled, bundledKeywords = new Map()) {
   const readable = { url: safeDecode(tab.url), title: tab.title };
   const match = matchTab(readable, categories, bundled, bundledKeywords);
   if (!match) return null;
-  const prompt = buildSupportPrompt(readable, match.categoryName);
+  const category = categories.find((c) => c.id === match.categoryId);
+  const kind = category?.bundledList === 'youtube-fun' ? 'youtube' : 'adult';
+  const prompt = buildSupportPrompt(readable, match.categoryName, kind);
   return { categoryId: match.categoryId, categoryName: match.categoryName, prompt, redirectUrl: claudeUrl(prompt) };
 }
 
