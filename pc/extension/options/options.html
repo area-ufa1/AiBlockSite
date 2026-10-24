@@ -15,6 +15,11 @@
 
     <section class="card status-card">
       <p id="status"><span class="dot"></span>Защита работает</p>
+      <p id="lock-status" class="lock-status"></p>
+      <div class="buttons">
+        <button id="weaken" hidden>Ослабить защиту</button>
+        <a id="change-mode" href="setup.html" hidden>Сменить режим защиты</a>
+      </div>
       <p id="incognito" class="warning" hidden>
         Включите «Разрешить в режиме инкогнито» в карточке расширения на странице расширений — иначе в инкогнито защита не работает.
       </p>
@@ -39,6 +44,12 @@
       <label>Домены <span class="hint">по одному в строке</span>
         <textarea id="domains" rows="4"></textarea>
       </label>
+      <label>Начинается с адреса <span class="hint">по одному в строке, например youtube.com/shorts/</span>
+        <textarea id="prefixes" rows="2"></textarea>
+      </label>
+      <label>Слова только на сайтах <span class="hint">через запятую; пусто — на всех сайтах</span>
+        <input id="only-hosts" type="text" autocomplete="off">
+      </label>
       <p id="bundled" class="hint" hidden></p>
       <div class="buttons">
         <button id="save" class="primary">Сохранить</button>
@@ -46,7 +57,31 @@
         <button id="delete" class="danger" hidden>Удалить</button>
       </div>
     </section>
+    <footer class="hint">
+      Версия <span id="version"></span> ·
+      <a id="updates" href="https://github.com/area-ufa1/AiBlockSite/releases/latest" target="_blank" rel="noopener">Проверить обновления</a>
+    </footer>
   </main>
+
+  <dialog id="unlock">
+    <h2>Изменение защищено</h2>
+    <div id="unlock-pause" hidden>
+      <p>Выключать категории и убирать слова можно после паузы. Если желание пройдёт за это время — отлично, значит, защита сработала.</p>
+      <p id="countdown" class="countdown"></p>
+      <div class="buttons">
+        <button id="start-countdown" class="primary">Начать паузу</button>
+        <button id="cancel-countdown" hidden>Отменить паузу</button>
+        <a id="talk" class="button" target="_blank" rel="noopener">Поговорить с Claude</a>
+      </div>
+    </div>
+    <div id="unlock-partner" hidden>
+      <p>Изменение подтверждает напарник: попросите его ввести PIN.</p>
+      <input id="pin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="8">
+      <p id="pin-error" class="warning"></p>
+      <div class="buttons"><button id="pin-ok" class="primary">Подтвердить</button></div>
+    </div>
+    <div class="buttons"><button id="unlock-close">Закрыть</button></div>
+  </dialog>
   <script type="module" src="options.js"></script>
 </body>
 </html>

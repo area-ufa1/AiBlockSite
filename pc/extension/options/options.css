@@ -39,3 +39,13 @@ button { font: inherit; padding: 8px 16px; border-radius: 10px; border: 1px soli
 button.primary { border: none; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
 button.danger { color: var(--danger); margin-left: auto; }
 button:disabled { opacity: .45; cursor: default; }
+.lock-status { margin-top: 8px !important; color: var(--muted); }
+.status-card .buttons { margin-top: 10px; align-items: center; }
+footer { margin-top: 28px; }
+a.button { font: inherit; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); text-decoration: none; }
+dialog { border: none; border-radius: 16px; padding: 20px 22px; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+dialog::backdrop { background: rgba(20, 22, 40, .45); }
+.countdown { font-size: 22px; font-weight: 700; }
+#pin-input { font-size: 20px; letter-spacing: 6px; width: 180px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; }
+.choice { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; font-weight: 400; }
+.choice input { margin-top: 4px; }

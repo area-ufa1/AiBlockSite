@@ -99,4 +99,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
-chrome.runtime.onInstalled.addListener(() => store.getState());
+// New install, or an update from a version without protection: show the setup wizard.
+chrome.runtime.onInstalled.addListener(async () => {
+  await store.getState();
+  if ((await store.getLock()).mode === null) chrome.tabs.create({ url: chrome.runtime.getURL('options/setup.html') });
+});

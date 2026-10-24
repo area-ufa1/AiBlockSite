@@ -1,4 +1,5 @@
-import { DEFAULT_CATEGORIES, parseDomains, parseKeywords } from './core/categories.js';
+import { DEFAULT_CATEGORIES, parseDomains, parseKeywords, parseUrlPrefixes } from './core/categories.js';
+import { initialLockState, isUnlocked, isWeakening, settle } from './core/lock.js';
 
 /**
  * Categories and per-category block counts in `area` (chrome.storage.local or a stand-in).
@@ -29,14 +30,34 @@ export function createStore(area) {
     return { categories: list, stats: stats ?? {} };
   }
 
+  async function readLock(now) {
+    const { lock } = await area.get(['lock']);
+    return settle(lock ?? initialLockState(), now);
+  }
+
+  /** Rejects with Error('locked') if the change weakens protection and no window is open. */
+  async function guard(before, after, now) {
+    if (!isWeakening(before, after)) return;
+    if (!isUnlocked(await readLock(now), now)) throw new Error('locked');
+  }
+
   return {
     getState: () => serial(read),
 
-    saveCategory: (id, name, keywordsText, domainsText) => serial(async () => {
+    /** Protection state, with a finished countdown already turned into an open window. */
+    getLock: (now = Date.now()) => serial(() => readLock(now)),
+
+    saveLock: (lock) => serial(() => area.set({ lock })),
+
+    /** `prefixesText`/`onlyHostsText` = null keeps the stored value. */
+    saveCategory: (id, name, keywordsText, domainsText, prefixesText = null, onlyHostsText = null, now = Date.now()) => serial(async () => {
       const { categories } = await read();
       const fields = { name: name.trim(), keywords: parseKeywords(keywordsText), domains: parseDomains(domainsText) };
+      if (prefixesText !== null) fields.urlPrefixes = parseUrlPrefixes(prefixesText);
+      if (onlyHostsText !== null) fields.onlyHosts = parseDomains(onlyHostsText);
       const existing = id === null ? undefined : categories.find((c) => c.id === id);
       if (existing) {
+        await guard(existing, { ...existing, ...fields }, now);
         Object.assign(existing, fields);
         await area.set({ categories });
         return existing.id;
@@ -46,13 +67,17 @@ export function createStore(area) {
       return created.id;
     }),
 
-    setEnabled: (id, enabled) => serial(async () => {
+    setEnabled: (id, enabled, now = Date.now()) => serial(async () => {
       const { categories } = await read();
+      const before = categories.find((c) => c.id === id);
+      if (before) await guard(before, { ...before, enabled }, now);
       await area.set({ categories: categories.map((c) => (c.id === id ? { ...c, enabled } : c)) });
     }),
 
-    deleteCategory: (id) => serial(async () => {
+    deleteCategory: (id, now = Date.now()) => serial(async () => {
       const { categories, stats } = await read();
+      const before = categories.find((c) => c.id === id);
+      if (before) await guard(before, null, now);
       delete stats[id];
       await area.set({ categories: categories.filter((c) => c.id !== id), stats });
     }),

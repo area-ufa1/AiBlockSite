@@ -82,3 +82,55 @@ test('a deleted built-in category is not added back', async () => {
   await store.deleteCategory('youtube-fun');
   assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['porn']);
 });
+
+import { setPauseMode, initialLockState, startCountdown, settle } from '../extension/src/core/lock.js';
+
+async function lockedStore() {
+  const store = createStore(fakeArea());
+  await store.getState();
+  await store.saveLock(setPauseMode(initialLockState(), 20));
+  return store;
+}
+
+test('lock defaults to unconfigured and is saved', async () => {
+  const store = createStore(fakeArea());
+  assert.equal((await store.getLock()).mode, null);
+  await store.saveLock(setPauseMode(initialLockState(), 15));
+  assert.equal((await store.getLock()).pauseMinutes, 15);
+});
+
+test('disabling a category without a window is rejected', async () => {
+  const store = await lockedStore();
+  await assert.rejects(store.setEnabled('porn', false, 0), /locked/);
+  assert.equal((await store.getState()).categories[0].enabled, true);
+});
+
+test('adding a word and enabling are allowed while locked', async () => {
+  const store = await lockedStore();
+  const porn = (await store.getState()).categories[0];
+  await store.saveCategory('porn', 'Порно', [...porn.keywords, 'новое'].join('\n'), '', null, null, 0);
+  await store.setEnabled('youtube-fun', true, 0);
+  const s = await store.getState();
+  assert.ok(s.categories[0].keywords.includes('новое'));
+  assert.equal(s.categories[1].enabled, true);
+});
+
+test('removing a word or deleting is rejected while locked', async () => {
+  const store = await lockedStore();
+  await assert.rejects(store.saveCategory('porn', 'Порно', '', '', null, null, 0), /locked/);
+  await assert.rejects(store.deleteCategory('porn', 0), /locked/);
+});
+
+test('deleting is allowed inside the window', async () => {
+  const store = await lockedStore();
+  await store.saveLock(settle(startCountdown(await store.getLock(), 0), 20 * 60_000));
+  await store.deleteCategory('porn', 21 * 60_000);
+  assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['youtube-fun']);
+});
+
+test('saveCategory sets url prefixes and only-hosts when given', async () => {
+  const store = createStore(fakeArea());
+  const id = await store.saveCategory(null, 'VK', '', '', 'https://www.vk.com/clips', 'vk.com');
+  const c = (await store.getState()).categories.find((x) => x.id === id);
+  assert.deepEqual([c.urlPrefixes, c.onlyHosts], [['vk.com/clips'], ['vk.com']]);
+});

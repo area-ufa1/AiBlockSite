@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Страж вкладок — настройка</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="../icons/icon48.png" alt="" width="40" height="40">
+      <h1>Настройка «Стража вкладок»</h1>
+    </header>
+
+    <p id="locked" class="warning" hidden>
+      Сменить режим защиты можно только при открытых изменениях. Откройте <a href="options.html">настройки</a> и нажмите «Ослабить защиту».
+    </p>
+
+    <form id="wizard">
+      <section class="card">
+        <h2>1. Что блокировать</h2>
+        <label class="choice"><input type="checkbox" id="cat-porn" checked> <span><b>Порно</b> — сайты для взрослых и поиск по откровенным словам</span></label>
+        <label class="choice"><input type="checkbox" id="cat-youtube"> <span><b>YouTube: развлечения</b> — Shorts и развлекательные видео (приколы, реакции, стримы…). Учебные видео открываются.</span></label>
+      </section>
+
+      <section class="card">
+        <h2>2. Защита от отключения</h2>
+        <p class="hint">Добавлять и включать можно всегда. Выключать категории и убирать слова — только так:</p>
+        <label class="choice"><input type="radio" name="mode" value="pause" checked>
+          <span><b>Пауза.</b> Нажимаете «Ослабить защиту» и ждёте
+            <select id="pause-minutes">
+              <option value="5">5 мин</option><option value="10">10 мин</option><option value="15">15 мин</option>
+              <option value="20" selected>20 мин</option><option value="30">30 мин</option><option value="45">45 мин</option><option value="60">60 мин</option>
+            </select>, после этого изменения открыты 5 минут.</span></label>
+        <label class="choice"><input type="radio" name="mode" value="partner">
+          <span><b>Напарник.</b> Изменения подтверждает PIN, который знает только ваш напарник. Пусть он введёт его сам.</span></label>
+        <div id="pin-fields" hidden>
+          <label>PIN (4–8 цифр) <input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>
+          <label>PIN ещё раз <input id="pin2" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. Режим инкогнито</h2>
+        <p>Откройте страницу расширений (<code>chrome://extensions</code> или <code>browser://extensions</code>), нажмите «Подробнее» у «Стража вкладок» и включите <b>«Разрешить в режиме инкогнито»</b>.</p>
+        <p id="incognito-ok" class="hint" hidden>✓ Уже включено</p>
+      </section>
+
+      <p id="error" class="warning"></p>
+      <div class="buttons"><button id="finish" type="submit" class="primary">Готово</button></div>
+    </form>
+
+    <section id="done" class="card" hidden>
+      <h2>Готово</h2>
+      <p>Защита включена. Настройки открываются по клику на значок щита в панели расширений.</p>
+      <p><a href="options.html">Открыть настройки</a></p>
+    </section>
+  </main>
+  <script type="module" src="setup.js"></script>
+</body>
+</html>
