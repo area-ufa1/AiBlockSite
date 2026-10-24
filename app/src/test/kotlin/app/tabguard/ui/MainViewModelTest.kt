@@ -106,9 +106,9 @@ class MainViewModelTest {
         val vm = vm()
         assertTrue(vm.await { it.categories.isNotEmpty() }.needsSetup)
         vm.completeSetup(LockMode.PAUSE, minutes = 10, pin = null, porn = true, youtube = true)
-        val s = vm.await { !it.needsSetup }
+        // Room publishes the category change asynchronously, possibly after the lock change.
+        val s = vm.await { !it.needsSetup && it.categories.first { c -> c.bundledList == "youtube-fun" }.category.enabled }
         assertEquals(LockMode.PAUSE, s.lock.mode)
-        assertTrue(s.categories.first { it.bundledList == "youtube-fun" }.category.enabled)
     }
 
     @Test
