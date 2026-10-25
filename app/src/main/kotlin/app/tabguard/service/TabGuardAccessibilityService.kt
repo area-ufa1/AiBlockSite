@@ -17,6 +17,10 @@ import app.tabguard.core.classify.ClassifierChain
 import app.tabguard.core.lock.Lock
 import app.tabguard.core.lock.LockState
 import app.tabguard.core.lock.ProtectedScreens
+import app.tabguard.core.model.TabSnapshot
+import app.tabguard.core.model.Verdict
+import app.tabguard.core.model.VerdictSource
+import app.tabguard.core.ui.YouTubeShorts
 import app.tabguard.core.pipeline.TabPipeline
 import app.tabguard.core.ui.TabExtractor
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +29,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -36,6 +41,9 @@ class TabGuardAccessibilityService : AccessibilityService() {
     private var lock: StateFlow<LockState>? = null
     private var lastToastAt = 0L
     private var lastProtectedAt = 0L
+    private var blockAction: BlockAction? = null
+    private var youtubeCategoryId: StateFlow<Long?>? = null
+    private var lastShortsBlockAt = 0L
 
     override fun onServiceConnected() {
         running = true
@@ -45,6 +53,10 @@ class TabGuardAccessibilityService : AccessibilityService() {
         lock = c.settings.lock.stateIn(scope, SharingStarted.Eagerly, LockState())
         val claudeEnabled = c.settings.claudeEnabled.stateIn(scope, SharingStarted.Eagerly, false)
         val action = BlockAction(this, c.repository, goBack = { performGlobalAction(GLOBAL_ACTION_BACK) })
+        blockAction = action
+        youtubeCategoryId = c.repository.observeWithCounts()
+            .map { rows -> rows.firstOrNull { it.bundledList == "youtube-fun" && it.category.enabled }?.category?.id }
+            .stateIn(scope, SharingStarted.Eagerly, null)
         pipeline = TabPipeline(
             scope = scope,
             classifier = ClassifierChain({ if (claudeEnabled.value) c.termux else null }),
@@ -56,6 +68,10 @@ class TabGuardAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val pkg = event.packageName?.toString() ?: return
+        if (pkg == YouTubeShorts.PACKAGE) {
+            guardYouTubeShorts()
+            return
+        }
         if (pkg !in browsers) {
             guardSystemScreen(pkg)
             return
@@ -66,6 +82,22 @@ class TabGuardAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() = Unit
+
+    /** Shorts in the YouTube app, while «YouTube: развлечения» is on: Back and Claude, like Shorts in a browser. */
+    private fun guardYouTubeShorts() {
+        val categoryId = youtubeCategoryId?.value ?: return
+        val action = blockAction ?: return
+        val root = rootInActiveWindow ?: return
+        if (!YouTubeShorts.isShortsPlayer(YouTubeShorts.PACKAGE, AccessibilityUiNode(root))) return
+        val now = System.currentTimeMillis()
+        if (now - lastShortsBlockAt < SHORTS_REPEAT_MS) {
+            // Still on Shorts right after a block (Back landed on the next Short): just leave again.
+            performGlobalAction(GLOBAL_ACTION_BACK)
+            return
+        }
+        lastShortsBlockAt = now
+        scope.launch { action.perform(SHORTS_TAB, Verdict.Block(categoryId, VerdictSource.PREFIX)) }
+    }
 
     /** Leaves the settings/uninstall screens that would switch protection off while changes are closed. */
     private fun guardSystemScreen(pkg: String) {
@@ -108,6 +140,9 @@ class TabGuardAccessibilityService : AccessibilityService() {
     }
 
     companion object {
+        private const val SHORTS_REPEAT_MS = 5_000L
+        private val SHORTS_TAB = TabSnapshot(YouTubeShorts.PACKAGE, "https://www.youtube.com/shorts/", "YouTube Shorts")
+
         /** True while Android actually has the service connected (same process as the UI). */
         @Volatile
         var running = false
