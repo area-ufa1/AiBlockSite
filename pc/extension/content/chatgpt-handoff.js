@@ -51,10 +51,24 @@
   }
 
   function parseActions(answer) {
-    const lines = String(answer || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const text = String(answer || '');
+    const marker = text.match(/<tabguard-focus-options>\s*([\s\S]*?)\s*<\/tabguard-focus-options>/i);
+    if (marker) {
+      try {
+        const marked = JSON.parse(marker[1]).options;
+        if (Array.isArray(marked)) {
+          const actions = marked.slice(0, 3).map((item) => ({
+            title: String(item?.title || '').replace(/\s+/g, ' ').trim().slice(0, 200),
+            description: String(item?.description || item?.title || '').replace(/\s+/g, ' ').trim().slice(0, 600),
+          })).filter((action) => action.title.length >= 3);
+          if (actions.length) return actions;
+        }
+      } catch {}
+    }
+    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     const numbered = lines.filter((line) => /^(?:\d+|[•*-])[.)]?\s+/.test(line));
     const candidates = (numbered.length ? numbered : lines).map((line) => line.replace(/^(?:\d+|[•*-])[.)]?\s+/, ''));
-    return candidates.slice(0, 3).map((line) => line.replace(/^\*+|\*+$/g, '').replace(/\s+/g, ' ').trim().slice(0, 200)).filter((title) => title.length >= 3);
+    return candidates.slice(0, 3).map((line) => line.replace(/^\*+|\*+$/g, '').replace(/\s+/g, ' ').trim().slice(0, 200)).filter((title) => title.length >= 3).map((title) => ({ title, description: title }));
   }
 
   async function waitForAnswer(before) {
@@ -73,7 +87,7 @@
     return last;
   }
 
-  function showActionPanel(actions, answer, sourceUrl) {
+  function showActionPanel(actions, answer, sourceUrl, context) {
     if (!actions.length || document.getElementById('tabguard-focus-actions')) return;
     const style = document.createElement('style');
     style.id = 'tabguard-focus-actions-style';
@@ -85,21 +99,25 @@
     heading.textContent = 'Можно начать с малого';
     panel.appendChild(heading);
     const intro = document.createElement('p');
-    intro.textContent = 'Выберите действие, которое стоит добавить в выбранную колонку Kanban.';
+    intro.textContent = context?.board && context?.column
+      ? `Цель: ${context.board.title} → ${context.column.title}. Выберите действие для Kanban.`
+      : 'Выберите действие, которое стоит добавить в выбранную колонку Kanban.';
     panel.appendChild(intro);
-    actions.forEach((title) => {
+    actions.forEach((action) => {
+      const { title, description } = action;
       const row = document.createElement('div');
       row.className = 'tabguard-action';
       const text = document.createElement('span');
       text.textContent = title;
       const button = document.createElement('button');
       button.textContent = 'В Kanban';
+      const clientRequestId = crypto.randomUUID();
       button.addEventListener('click', async () => {
         button.disabled = true;
         button.textContent = 'Добавляю…';
         const result = await chrome.runtime.sendMessage({
           type: 'tabguard-create-card',
-          action: { title, description: title },
+          action: { title, description, clientRequestId },
           sourceUrl,
         }).catch(() => ({ ok: false, error: 'Не удалось связаться с TabGuard' }));
         button.textContent = result?.ok ? 'Добавлено' : (result?.error || 'Ошибка');
@@ -108,6 +126,32 @@
       row.append(text, button);
       panel.appendChild(row);
     });
+    (context?.cards || []).forEach((card) => {
+      const row = document.createElement('div');
+      row.className = 'tabguard-action';
+      const text = document.createElement('span');
+      text.textContent = `Переместить «${card.title}» в ${context.column.title}`;
+      const button = document.createElement('button');
+      button.textContent = 'Переместить';
+      button.disabled = !Number.isInteger(card.version);
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.textContent = 'Перемещаю…';
+        const result = await chrome.runtime.sendMessage({
+          type: 'tabguard-create-card',
+          action: { title: card.title, description: card.description || '', existingCardId: card.id, expectedVersion: card.version, clientRequestId: crypto.randomUUID() },
+          sourceUrl,
+        }).catch(() => ({ ok: false, error: 'Не удалось связаться с TabGuard' }));
+        button.textContent = result?.ok ? 'Перемещено' : (result?.error || 'Ошибка');
+        if (!result?.ok) button.disabled = false;
+      });
+      row.append(text, button);
+      panel.appendChild(row);
+    });
+    const close = document.createElement('button');
+    close.textContent = 'Ничего не менять';
+    close.addEventListener('click', () => panel.remove());
+    panel.appendChild(close);
     document.body.appendChild(panel);
   }
 
@@ -143,7 +187,7 @@
     cleanUrl.searchParams.delete('tabguard_handoff');
     window.history.replaceState({}, document.title, cleanUrl.href);
     const answer = await waitForAnswer(beforeAnswers);
-    showActionPanel(parseActions(answer), answer, handoff.sourceUrl);
+    showActionPanel(parseActions(answer), answer, handoff.sourceUrl, handoff.context);
   }
 
   run().catch(() => chrome.runtime.sendMessage({ type: 'tabguard-handoff-status', nonce, status: 'failed' }));

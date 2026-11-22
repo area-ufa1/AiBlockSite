@@ -76,14 +76,27 @@ test('creates a Kanban focus session with the integration token', async () => {
   assert.equal(JSON.parse(request.init.body).source, 'tabguard_chatgpt');
 });
 
+test('moves an existing Kanban card with its optimistic-lock version', async () => {
+  let request;
+  const { moveKanbanCard } = await import('../extension/src/kanban/client.js');
+  await moveKanbanCard({ baseUrl: 'http://localhost:8000', token: 'tg_secret', workspaceId: '4', boardId: '5', columnId: '6' }, 12, 3, async (url, init) => {
+    request = { url: String(url), init };
+    return new Response(JSON.stringify({ action: 'moved', card_id: 12 }), { status: 200 });
+  });
+  const body = JSON.parse(request.init.body);
+  assert.equal(body.existing_card_id, 12);
+  assert.equal(body.expected_version, 3);
+});
+
 test('normalizes context to bounded prompt-safe fields', () => {
   const context = normalizeKanbanContext({
     board: { id: 1, title: 'Focus' },
     column: { id: 2, title: 'Next' },
-    cards: [{ id: 3, title: '  Start  ', description: 'x'.repeat(900), priority: 'high', deadline: '2026-11-23T10:00:00Z', column_id: 2 }, ...Array.from({ length: 20 }, (_, id) => ({ id: id + 10, title: `Card ${id}` }))],
+    cards: [{ id: 3, title: '  Start  ', description: 'x'.repeat(900), priority: 'high', deadline: '2026-11-23T10:00:00Z', column_id: 2, version: 4 }, ...Array.from({ length: 20 }, (_, id) => ({ id: id + 10, title: `Card ${id}`, version: 1 }))],
   });
   assert.equal(context.cards.length, 10);
   assert.equal(context.cards[0].description.length, 600);
+  assert.equal(context.cards[0].version, 4);
   assert.match(kanbanContextForPrompt(context), /Доска Kanban: Focus/);
   assert.match(kanbanContextForPrompt(context), /1\. Start/);
 });

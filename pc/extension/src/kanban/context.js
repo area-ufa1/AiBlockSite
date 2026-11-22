@@ -24,6 +24,7 @@ export function normalizeKanbanContext(payload) {
     priority: text(card?.priority, 32),
     deadline: text(card?.deadline, 64),
     columnId: card?.column_id,
+    version: card?.version,
   })).filter((card) => card.id !== undefined && card.title);
   return { board, column, cards };
 }

@@ -20,6 +20,8 @@ test('handoff stores prompt behind a nonce and binds reads to the source tab', a
   assert.equal(record.nonce, '12345678-1234-1234-1234-123456789abc');
   assert.equal((await store.get(record.nonce, 8)), null);
   assert.equal((await store.get(record.nonce, 7)).prompt, 'private prompt');
+  assert.equal((await store.claim(record.nonce, 7)).prompt, 'private prompt');
+  assert.equal(await store.claim(record.nonce, 7), null);
   await store.update(record.nonce, { status: 'sent' });
   assert.equal((await store.get(record.nonce, 7)).status, 'sent');
   now += MAX_AGE_MS + 1;

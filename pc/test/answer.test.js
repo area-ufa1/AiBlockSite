@@ -12,3 +12,11 @@ test('falls back to short paragraphs and bounds card description', () => {
   assert.equal(actions.length, 2);
   assert.ok(buildFocusCardDescription(actions[0], 'Ответ '.repeat(500), 'https://chatgpt.com/').length <= 600);
 });
+
+test('prefers a bounded machine-readable focus marker', () => {
+  const actions = parseFocusActions('<tabguard-focus-options>{"options":[{"title":"Открыть файл","description":"Открыть файл проекта"},{"title":"Сделать шаг"}]}</tabguard-focus-options>');
+  assert.deepEqual(actions, [
+    { title: 'Открыть файл', description: 'Открыть файл проекта' },
+    { title: 'Сделать шаг', description: 'Сделать шаг' },
+  ]);
+});

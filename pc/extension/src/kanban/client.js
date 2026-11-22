@@ -8,6 +8,16 @@ function makeUrl(baseUrl, path, params = {}) {
   return url;
 }
 
+async function fetchWithTimeout(fetchImpl, url, init, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function parseResponse(response) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -29,7 +39,7 @@ export async function fetchKanbanContext(settings, fetchImpl = fetch) {
     column_id: normalized.columnId,
     limit: normalized.limit,
   });
-  const response = await fetchImpl(url, {
+  const response = await fetchWithTimeout(fetchImpl, url, {
     headers: { Authorization: `TabGuard ${normalized.token}` },
     credentials: 'omit',
   });
@@ -46,30 +56,45 @@ export async function createKanbanFocusSession(settings, action, fetchImpl = fet
   const title = String(action?.title ?? '').trim().slice(0, 255);
   const description = String(action?.description ?? '').trim().slice(0, 4000);
   if (!title) throw new Error('The suggested task has no title');
-  const response = await fetchImpl(makeUrl(normalized.baseUrl, '/api/integrations/tabguard/focus-sessions'), {
+  const body = {
+    client_request_id: action?.clientRequestId || crypto.randomUUID(),
+    workspace_id: ids[0],
+    board_id: ids[1],
+    column_id: ids[2],
+    title,
+    description,
+    source: 'tabguard_chatgpt',
+    source_url: String(action?.sourceUrl ?? '').slice(0, 500),
+  };
+  if (action?.existingCardId !== undefined && action?.existingCardId !== null) {
+    body.existing_card_id = Number(action.existingCardId);
+    body.expected_version = Number(action.expectedVersion);
+  }
+  const response = await fetchWithTimeout(fetchImpl, makeUrl(normalized.baseUrl, '/api/integrations/tabguard/focus-sessions'), {
     method: 'POST',
     headers: {
       Authorization: `TabGuard ${normalized.token}`,
       'Content-Type': 'application/json',
     },
     credentials: 'omit',
-    body: JSON.stringify({
-      client_request_id: crypto.randomUUID(),
-      workspace_id: ids[0],
-      board_id: ids[1],
-      column_id: ids[2],
-      title,
-      description,
-      source: 'tabguard_chatgpt',
-      source_url: String(action?.sourceUrl ?? '').slice(0, 500),
-    }),
+    body: JSON.stringify(body),
   });
   return parseResponse(response);
+}
+
+export async function moveKanbanCard(settings, cardId, expectedVersion, fetchImpl = fetch) {
+  return createKanbanFocusSession(settings, {
+    title: 'Перемещение карточки',
+    existingCardId: cardId,
+    expectedVersion,
+    description: '',
+  }, fetchImpl);
 }
 
 export function createKanbanClient(settings, fetchImpl = fetch) {
   return {
     getContext: () => fetchKanbanContext(settings, fetchImpl),
     createFocusSession: (action) => createKanbanFocusSession(settings, action, fetchImpl),
+    moveCard: (cardId, expectedVersion) => moveKanbanCard(settings, cardId, expectedVersion, fetchImpl),
   };
 }
