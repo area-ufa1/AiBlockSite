@@ -8,7 +8,7 @@ const os = require('node:os');
 
 const root = path.resolve(__dirname, '../..');
 const ext = path.join(root, 'pc/dist/TabGuard');
-const CLAUDE = 'https://claude.ai/new?q=';
+const CLAUDE = 'https://chatgpt.com/';
 
 async function waitFor(fn, ms, label) {
   const end = Date.now() + ms;
@@ -36,6 +36,13 @@ async function open(page, url) {
   await context.route('**/*', (route) => {
     const url = route.request().url();
     if (!/^https?:/.test(url)) return route.continue();
+    if (url.startsWith('https://chatgpt.com/')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/html; charset=utf-8',
+        body: '<title>ChatGPT mock</title><textarea placeholder="Message ChatGPT"></textarea><button data-testid="send-button" onclick="document.body.dataset.sent=\'yes\'">Send</button>',
+      });
+    }
     const title = url.includes('/titled/') ? 'Горячее порно видео'
       : url.includes('youtube.com/watch?v=study') ? 'Лекция по физике - YouTube'
       : 'Обычная страница';
@@ -56,9 +63,11 @@ async function open(page, url) {
     globalThis.smoke = { context, extId, open, waitFor, check, CLAUDE };
 
     const page = await context.newPage();
-    await check('search with a keyword goes to claude', async () => {
+    await check('search with a keyword opens ChatGPT and auto-sends', async () => {
       await open(page, 'https://example.com/search?q=porn');
       await waitFor(() => page.url().startsWith(CLAUDE), 10000, page.url());
+      await waitFor(() => page.locator('body').getAttribute('data-sent') === 'yes', 10000, 'handoff was not sent');
+      if (!(await page.locator('textarea').inputValue()).includes('ровно три')) throw new Error('prompt was not inserted');
     });
     await check('ordinary page is untouched', async () => {
       const p = await context.newPage();

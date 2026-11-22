@@ -19,5 +19,14 @@ if [ -n "$VERSION" ]; then
   node -e 'const f=process.argv[1],m=JSON.parse(require("fs").readFileSync(f));m.version=process.argv[2];require("fs").writeFileSync(f,JSON.stringify(m,null,2)+"\n")' \
     "$DIST/TabGuard/manifest.json" "$VERSION"
 fi
-(cd "$DIST" && rm -f TabGuard-PC.zip && zip -qr TabGuard-PC.zip TabGuard install.bat УСТАНОВКА.txt)
+if command -v zip >/dev/null 2>&1; then
+  (cd "$DIST" && rm -f TabGuard-PC.zip && zip -qr TabGuard-PC.zip TabGuard install.bat УСТАНОВКА.txt)
+elif command -v powershell.exe >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
+  DIST_WIN="$(cygpath -w "$DIST")"
+  powershell.exe -NoProfile -NonInteractive -Command \
+    '$root = "'"$DIST_WIN"'"; $paths = Get-ChildItem -LiteralPath $root | Where-Object { $_.Name -ne "TabGuard-PC.zip" } | Select-Object -ExpandProperty FullName; Compress-Archive -Path $paths -DestinationPath (Join-Path $root "TabGuard-PC.zip") -Force'
+else
+  echo "zip or PowerShell is required to create TabGuard-PC.zip" >&2
+  exit 1
+fi
 echo "packaged into $DIST"

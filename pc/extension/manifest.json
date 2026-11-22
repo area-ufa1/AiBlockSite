@@ -33,6 +33,12 @@
     "offscreen",
     "clipboardWrite"
   ],
+  "optional_host_permissions": [
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:3000/*",
+    "http://127.0.0.1:3000/*"
+  ],
   "incognito": "spanning",
   "content_scripts": [
     {
@@ -60,6 +66,16 @@
         "content/youtube.css"
       ],
       "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "content/chatgpt-handoff.js"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "minimum_chrome_version": "111"

@@ -10,7 +10,8 @@ module.exports = async ({ context, open, waitFor, check, CLAUDE }) => {
     const p = await context.newPage();
     await open(p, 'https://www.youtube.com/shorts/abc123');
     await waitFor(() => p.url().startsWith(CLAUDE), 10000, p.url());
-    if (!decodeURIComponent(p.url()).includes('развлекательный YouTube')) throw new Error('wrong prompt');
+    await waitFor(() => p.locator('body').getAttribute('data-sent') === 'yes', 10000, 'handoff was not sent');
+    if (!(await p.locator('textarea').inputValue()).includes('развлекательное видео на YouTube')) throw new Error('wrong prompt');
   });
 
   await check('study video on youtube is not blocked', async () => {

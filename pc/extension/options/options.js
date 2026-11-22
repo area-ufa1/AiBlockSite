@@ -1,6 +1,8 @@
 import { createStore } from '../src/store.js';
 import { createBundledLoader } from '../src/bundled.js';
 import { createUnlockUi } from './unlock.js';
+import { createKanbanStorage } from '../src/kanban/storage.js';
+import { fetchKanbanContext } from '../src/kanban/client.js';
 
 const store = createStore(chrome.storage.local);
 const bundled = createBundledLoader((name) =>
@@ -11,6 +13,7 @@ const bundled = createBundledLoader((name) =>
 
 const $ = (id) => document.getElementById(id);
 const unlock = createUnlockUi(store);
+const kanbanStorage = createKanbanStorage(chrome.storage.local);
 
 /** Runs a store change; a weakening change while locked opens the unlock dialog instead. */
 async function guarded(change) {
@@ -80,6 +83,70 @@ function updateSave() {
   $('save').disabled = $('name').value.trim() === '';
 }
 
+function readKanbanForm() {
+  return {
+    enabled: $('kanban-enabled').checked,
+    baseUrl: $('kanban-url').value,
+    token: $('kanban-token').value,
+    workspaceId: $('kanban-workspace').value,
+    boardId: $('kanban-board').value,
+    columnId: $('kanban-column').value,
+    limit: $('kanban-limit').value,
+  };
+}
+
+function setKanbanStatus(message, error = false) {
+  const status = $('kanban-status');
+  status.textContent = message;
+  status.classList.toggle('warning', error);
+}
+
+async function loadKanbanSettings() {
+  const settings = await kanbanStorage.get();
+  $('kanban-enabled').checked = settings.enabled;
+  $('kanban-url').value = settings.baseUrl;
+  $('kanban-token').value = settings.token;
+  $('kanban-workspace').value = settings.workspaceId;
+  $('kanban-board').value = settings.boardId;
+  $('kanban-column').value = settings.columnId;
+  $('kanban-limit').value = settings.limit;
+}
+
+async function requestKanbanPermission(baseUrl) {
+  const origin = new URL(baseUrl).origin;
+  if (!chrome.permissions?.request) return;
+  const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
+  if (!granted) throw new Error('Доступ к адресу Kanban не разрешён');
+}
+
+async function saveKanbanSettings() {
+  try {
+    const settings = await kanbanStorage.save(readKanbanForm());
+    setKanbanStatus(settings.enabled ? 'Подключение сохранено.' : 'Подключение сохранено и выключено.');
+    return settings;
+  } catch (error) {
+    setKanbanStatus(error.message, true);
+    return null;
+  }
+}
+
+$('kanban-save').addEventListener('click', () => saveKanbanSettings());
+$('kanban-test').addEventListener('click', async () => {
+  const button = $('kanban-test');
+  button.disabled = true;
+  try {
+    const settings = await saveKanbanSettings();
+    if (!settings) return;
+    await requestKanbanPermission(settings.baseUrl);
+    const context = await fetchKanbanContext(settings);
+    setKanbanStatus(`Связь работает. Получено карточек: ${context.cards?.length ?? 0}.`);
+  } catch (error) {
+    setKanbanStatus(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
 $('add').addEventListener('click', () => openEditor(null));
 $('name').addEventListener('input', updateSave);
 $('cancel').addEventListener('click', closeEditor);
@@ -103,6 +170,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 render();
 unlock.renderStatus();
+loadKanbanSettings();
   if (changes.lock) unlock.renderStatus();
 });
 
