@@ -37,6 +37,8 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus { outline: 2p
 .buttons { display: flex; gap: 10px; margin-top: 8px; }
 button { font: inherit; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); cursor: pointer; }
 button.primary { border: none; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+button.primary:hover:not(:disabled) { filter: brightness(.96); transform: translateY(-1px); }
+button.primary:active:not(:disabled) { transform: translateY(0); }
 button.danger { color: var(--danger); margin-left: auto; }
 button:disabled { opacity: .45; cursor: default; }
 .lock-status { margin-top: 8px !important; color: var(--muted); }
@@ -52,6 +54,11 @@ dialog::backdrop { background: rgba(20, 22, 40, .45); }
 #kanban-section .section-head { align-items: center; }
 #kanban-section .kanban-toggle { margin: 0; white-space: nowrap; }
 #kanban-section .kanban-toggle input { margin-top: 0; flex-shrink: 0; }
+#kanban-test { min-width: 170px; transition: filter .15s, transform .15s, opacity .15s; }
+#kanban-test.is-loading { cursor: wait; }
+#kanban-test.is-loading::before { content: ""; width: 14px; height: 14px; margin-right: 8px; border: 2px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; display: inline-block; vertical-align: -2px; animation: kanban-spin .7s linear infinite; }
+#kanban-status { min-height: 1.5em; }
+@keyframes kanban-spin { to { transform: rotate(360deg); } }
 
 .bundled { border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin: 4px 0 12px; }
 .bundled summary { cursor: pointer; font-weight: 600; }

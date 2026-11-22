@@ -118,16 +118,25 @@ $('kanban-enabled').addEventListener('change', () => saveKanbanSettings());
 $('kanban-token').addEventListener('change', () => saveKanbanSettings());
 $('kanban-test').addEventListener('click', async () => {
   const button = $('kanban-test');
+  const defaultLabel = button.textContent;
   button.disabled = true;
+  button.classList.add('is-loading');
+  button.setAttribute('aria-busy', 'true');
+  setKanbanStatus('\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u0435\u043c \u0441\u0432\u044f\u0437\u044c\u2026');
+  button.textContent = '\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u0435\u043c\u2026';
   try {
     const settings = await saveKanbanSettings();
     if (!settings) return;
+    setKanbanStatus('\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u0435\u043c \u0441\u0432\u044f\u0437\u044c\u2026');
     const context = await fetchKanbanContext(settings);
-    setKanbanStatus(`\u0421\u0432\u044f\u0437\u044c \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442. \u0414\u043e\0441\u043a\u0430: ${context.board.title}.`);
+    setKanbanStatus(`\u0421\u0432\u044f\u0437\u044c \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442. \u0414\u043e\u0441\u043a\u0430: ${context.board.title}.`);
   } catch (error) {
     setKanbanStatus(error.message, true);
   } finally {
     button.disabled = false;
+    button.classList.remove('is-loading');
+    button.removeAttribute('aria-busy');
+    button.textContent = defaultLabel;
   }
 });
 
