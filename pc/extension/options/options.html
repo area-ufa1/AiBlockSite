@@ -24,6 +24,36 @@
       </p>
     </section>
 
+    <section class="card" id="kanban-section">
+      <div class="section-head">
+        <h2>Подключение Kanban</h2>
+        <label class="choice"><input id="kanban-enabled" type="checkbox"> Использовать контекст задач</label>
+      </div>
+      <p class="hint">TabGuard передаст в ChatGPT только выбранные карточки из указанной доски. Токен хранится локально в расширении и не добавляется в промпт.</p>
+      <label>Адрес Kanban
+        <input id="kanban-url" type="url" placeholder="http://localhost:8000" autocomplete="url">
+      </label>
+      <label>Интеграционный токен
+        <input id="kanban-token" type="password" placeholder="tg_…" autocomplete="off">
+      </label>
+      <div class="two-columns">
+        <label>ID доски
+          <input id="kanban-board" type="text" autocomplete="off">
+        </label>
+        <label>ID колонки
+          <input id="kanban-column" type="text" autocomplete="off">
+        </label>
+      </div>
+      <label>Количество карточек
+        <input id="kanban-limit" type="number" min="1" max="10" step="1">
+      </label>
+      <div class="buttons">
+        <button id="kanban-save" class="primary">Сохранить подключение</button>
+        <button id="kanban-test">Проверить связь</button>
+      </div>
+      <p id="kanban-status" class="hint" role="status"></p>
+    </section>
+
     <section>
       <div class="section-head">
         <h2>Категории</h2>
