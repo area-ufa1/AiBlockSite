@@ -1,9 +1,9 @@
 import { isAllowlisted, matchTab } from './matcher.js';
-import { buildSupportPrompt, claudeUrl } from './prompt.js';
+import { buildSupportPrompt, chatgptUrl } from './prompt.js';
 import { matchGenre } from './youtube.js';
 
 /**
- * Whether to send the tab to Claude. Only http(s) pages are checked, so browser and extension
+ * Whether to send the tab to ChatGPT. Only http(s) pages are checked, so browser and extension
  * pages (including our own settings) can never be blocked. `tab.genre` is the YouTube video
  * category when the page reported it.
  * @returns {{categoryId: string, categoryName: string, prompt: string, redirectUrl: string} | null}
@@ -17,7 +17,7 @@ export function decide(tab, categories, bundled, bundledKeywords = new Map()) {
   const category = categories.find((c) => c.id === match.categoryId);
   const kind = category?.bundledList === 'youtube-fun' ? 'youtube' : 'adult';
   const prompt = buildSupportPrompt(readable, match.categoryName, kind);
-  return { categoryId: match.categoryId, categoryName: match.categoryName, prompt, redirectUrl: claudeUrl(prompt) };
+  return { categoryId: match.categoryId, categoryName: match.categoryName, prompt, redirectUrl: chatgptUrl(prompt) };
 }
 
 function safeDecode(url) {

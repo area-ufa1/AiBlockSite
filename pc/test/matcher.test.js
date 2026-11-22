@@ -50,8 +50,8 @@ test('bundled list domains match', () => {
 });
 
 test('allowlisted hosts are never blocked', () => {
-  assert.equal(isAllowlisted('claude.ai/new?q=порно'), true);
-  assert.equal(isAllowlisted('https://www.anthropic.com/x'), true);
-  assert.equal(isAllowlisted('https://notclaude.ai.evil.com'), false);
+  assert.equal(isAllowlisted('chatgpt.com/?q=порно'), true);
+  assert.equal(isAllowlisted('https://chat.openai.com/x'), true);
+  assert.equal(isAllowlisted('https://notchatgpt.com.evil.com'), false);
   assert.equal(isAllowlisted(null), false);
 });

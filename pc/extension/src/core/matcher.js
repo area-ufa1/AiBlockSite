@@ -1,7 +1,7 @@
 // On-device matching by category domains and keywords; same rules as the Android app (LocalMatcher.kt).
 import { extractHost, tokenize } from './text.js';
 
-const ALLOWED_HOSTS = ['claude.ai', 'anthropic.com'];
+const ALLOWED_HOSTS = ['chatgpt.com', 'chat.openai.com', 'openai.com'];
 
 const isWithin = (host, domain) => host === domain || host.endsWith(`.${domain}`);
 

@@ -2,11 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_CATEGORIES, parseKeywords, parseDomains } from '../extension/src/core/categories.js';
 
-test('default category is porn with bundled list', () => {
-  assert.deepEqual(DEFAULT_CATEGORIES.map((c) => c.id), ['porn', 'youtube-fun']);
+test('default categories include games with bundled list', () => {
+  assert.deepEqual(DEFAULT_CATEGORIES.map((c) => c.id), ['porn', 'youtube-fun', 'games']);
   const c = DEFAULT_CATEGORIES[0];
   assert.deepEqual([c.id, c.name, c.enabled, c.bundledList], ['porn', 'Порно', true, 'adult']);
   assert.deepEqual(c.keywords, ['порно', 'porn', 'xxx', 'секс', 'sex', 'хентай', 'hentai', 'nsfw', 'onlyfans', 'эротика']);
+  assert.deepEqual(DEFAULT_CATEGORIES[2], {
+    id: 'games', name: 'Игры', enabled: true, keywords: [], domains: [], bundledList: 'games', urlPrefixes: [], onlyHosts: [],
+  });
 });
 
 test('parseKeywords drops blanks and duplicates', () =>

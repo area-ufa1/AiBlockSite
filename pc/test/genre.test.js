@@ -19,7 +19,7 @@ test('entertainment genres are recognized', () => {
 test('video with an entertainment genre is blocked even with a neutral title', () => {
   const d = watch('Entertainment');
   assert.equal(d?.categoryId, 'youtube-fun');
-  assert.ok(d.prompt.includes('развлекательный YouTube'), d.prompt);
+  assert.ok(d.prompt.includes('открыл развлекательное видео на YouTube'), d.prompt);
 });
 
 test('educational genre passes', () => assert.equal(watch('Education'), null));

@@ -20,6 +20,7 @@ async function init() {
   const { categories } = await store.getState();
   $('cat-porn').checked = categories.find((c) => c.id === 'porn')?.enabled ?? true;
   $('cat-youtube').checked = categories.find((c) => c.id === 'youtube-fun')?.enabled ?? false;
+  $('cat-games').checked = categories.find((c) => c.id === 'games')?.enabled ?? true;
   if (lock.mode) document.querySelector(`input[name=mode][value=${lock.mode}]`).checked = true;
   $('pause-minutes').value = String(lock.pauseMinutes);
   syncMode();
@@ -47,7 +48,7 @@ $('wizard').addEventListener('submit', async (e) => {
     }
     // Categories first: protection is still open while the wizard runs.
     const { categories } = await store.getState();
-    for (const [id, box] of [['porn', 'cat-porn'], ['youtube-fun', 'cat-youtube']]) {
+    for (const [id, box] of [['porn', 'cat-porn'], ['youtube-fun', 'cat-youtube'], ['games', 'cat-games']]) {
       if (categories.some((c) => c.id === id)) await store.setEnabled(id, $(box).checked);
     }
     await store.setMode(next);

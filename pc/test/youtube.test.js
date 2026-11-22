@@ -51,7 +51,7 @@ test('youtube home and search are not blocked', () => {
 
 test('youtube block uses its own prompt', () => {
   const d = check('https://www.youtube.com/shorts/abc');
-  assert.ok(d.prompt.includes('развлекательный YouTube'), d.prompt);
+  assert.ok(d.prompt.includes('развлекательное видео на YouTube'), d.prompt);
   const p = check('https://x.com/porn');
   assert.ok(p.prompt.includes('«Порно»'));
 });

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Страж вкладок",
-  "version": "0.1.0",
-  "description": "Уводит с нежелательных сайтов в Claude с поддерживающим сообщением.",
+  "version": "1.2.0",
+  "description": "Уводит с нежелательных сайтов в ChatGPT с поддерживающим сообщением.",
   "background": {
     "service_worker": "src/background.js",
     "type": "module"
