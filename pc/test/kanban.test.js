@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createKanbanStorage, normalizeKanbanSettings, normalizeKanbanUrl } from '../extension/src/kanban/storage.js';
 import { fetchKanbanContext } from '../extension/src/kanban/client.js';
+import { kanbanContextForPrompt, normalizeKanbanContext } from '../extension/src/kanban/context.js';
 
 function memoryArea(initial = {}) {
   const data = { ...initial };
@@ -58,4 +59,16 @@ test('surfaces API error code without including the token', async () => {
     fetchKanbanContext({ baseUrl: 'http://localhost:8000', token: 'tg_secret', boardId: 'b1', columnId: 'c1' }, async () => new Response(JSON.stringify({ code: 'TOKEN_REVOKED', detail: 'revoked' }), { status: 401 })),
     (error) => error.status === 401 && error.code === 'TOKEN_REVOKED' && !error.message.includes('tg_secret'),
   );
+});
+
+test('normalizes context to bounded prompt-safe fields', () => {
+  const context = normalizeKanbanContext({
+    board: { id: 1, title: 'Focus' },
+    column: { id: 2, title: 'Next' },
+    cards: [{ id: 3, title: '  Start  ', description: 'x'.repeat(900), priority: 'high', deadline: '2026-11-23T10:00:00Z', column_id: 2 }, ...Array.from({ length: 20 }, (_, id) => ({ id: id + 10, title: `Card ${id}` }))],
+  });
+  assert.equal(context.cards.length, 10);
+  assert.equal(context.cards[0].description.length, 600);
+  assert.match(kanbanContextForPrompt(context), /Доска Kanban: Focus/);
+  assert.match(kanbanContextForPrompt(context), /1\. Start/);
 });

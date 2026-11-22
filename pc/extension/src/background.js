@@ -5,6 +5,9 @@ import { safeSearchUrl } from './core/safesearch.js';
 import { BlockCooldown } from './core/cooldown.js';
 import { createStore } from './store.js';
 import { createBundledLoader } from './bundled.js';
+import { createKanbanStorage } from './kanban/storage.js';
+import { fetchKanbanContext } from './kanban/client.js';
+import { kanbanContextForPrompt } from './kanban/context.js';
 
 const store = createStore(chrome.storage.local);
 const bundled = createBundledLoader((name) =>
@@ -14,6 +17,7 @@ const bundled = createBundledLoader((name) =>
     return r.text();
   }));
 const cooldown = new BlockCooldown();
+const kanbanStorage = createKanbanStorage(chrome.storage.local);
 
 function bundledNames(categories) {
   return [...new Set(categories.filter((c) => c.enabled && c.bundledList).map((c) => c.bundledList))];
@@ -36,7 +40,15 @@ async function check(tabId, url, title, genre = null) {
   try {
     if (!url || !/^https?:/i.test(url)) return;
     const { categories } = await store.getState();
-    const verdict = decide({ url, title, genre }, categories, await bundledFor(categories), await bundledKeywordsFor(categories));
+    const bundledDomains = await bundledFor(categories);
+    const bundledKeywords = await bundledKeywordsFor(categories);
+    let verdict = decide({ url, title, genre }, categories, bundledDomains, bundledKeywords);
+    if (verdict) {
+      const focusContext = await loadKanbanContext();
+      verdict = decide({ url, title, genre }, categories, bundledDomains, bundledKeywords, {
+        kanbanContext: kanbanContextForPrompt(focusContext),
+      });
+    }
     if (!verdict) {
       const safe = safeSearchUrl(url);
       if (safe) await chrome.tabs.update(tabId, { url: safe });
@@ -59,6 +71,17 @@ async function check(tabId, url, title, genre = null) {
     await Promise.allSettled([copyToClipboard(verdict.prompt), store.incrementStat(verdict.categoryId)]);
   } catch (e) {
     console.error('Страж вкладок:', e);
+  }
+}
+
+async function loadKanbanContext() {
+  try {
+    const settings = await kanbanStorage.get();
+    if (!settings.enabled) return null;
+    return await fetchKanbanContext(settings);
+  } catch {
+    // A blocked page must still be redirected if Kanban is offline or misconfigured.
+    return null;
   }
 }
 

@@ -22,3 +22,12 @@ test('YouTube prompt includes title and URL for analysis', () => {
 
 test('support prompt truncates page to 200 chars', () =>
   assert.ok(!buildSupportPrompt({ url: null, title: 'я'.repeat(500) }, 'Порно').includes('я'.repeat(201))));
+
+test('support prompt includes bounded Kanban focus context and three easy actions', () => {
+  const p = buildSupportPrompt({ url: 'https://example.com', title: 'Отвлекающая страница' }, 'Порно', 'adult', {
+    kanbanContext: 'Доска Kanban: Учёба\n1. Прочитать один абзац',
+  });
+  assert.match(p, /Контекст моего Kanban/);
+  assert.match(p, /ровно три конкретных лёгких действия/);
+  assert.match(p, /Прочитать один абзац/);
+});

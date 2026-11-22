@@ -8,7 +8,7 @@ import { matchGenre } from './youtube.js';
  * category when the page reported it.
  * @returns {{categoryId: string, categoryName: string, prompt: string, redirectUrl: string} | null}
  */
-export function decide(tab, categories, bundled, bundledKeywords = new Map()) {
+export function decide(tab, categories, bundled, bundledKeywords = new Map(), options = {}) {
   if (!tab.url || !/^https?:\/\//i.test(tab.url) || isAllowlisted(tab.url)) return null;
   // Browsers report URLs percent-encoded (q=%D0%BF…); match and show the readable form.
   const readable = { url: safeDecode(tab.url), title: tab.title };
@@ -16,7 +16,7 @@ export function decide(tab, categories, bundled, bundledKeywords = new Map()) {
   if (!match) return null;
   const category = categories.find((c) => c.id === match.categoryId);
   const kind = category?.bundledList === 'youtube-fun' ? 'youtube' : 'adult';
-  const prompt = buildSupportPrompt(readable, match.categoryName, kind);
+  const prompt = buildSupportPrompt(readable, match.categoryName, kind, options);
   return { categoryId: match.categoryId, categoryName: match.categoryName, prompt, redirectUrl: chatgptUrl(prompt) };
 }
 
