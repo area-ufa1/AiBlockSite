@@ -1,18 +1,10 @@
+export const KANBAN_BASE_URL = 'https://kanban.unit-urfu.ru';
+
 const DEFAULT_SETTINGS = Object.freeze({
   enabled: false,
-  baseUrl: '',
+  baseUrl: KANBAN_BASE_URL,
   token: '',
-  workspaceId: '',
-  boardId: '',
-  columnId: '',
-  limit: 5,
 });
-
-function clampLimit(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return DEFAULT_SETTINGS.limit;
-  return Math.min(10, Math.max(1, Math.round(number)));
-}
 
 export function normalizeKanbanUrl(value) {
   const input = String(value ?? '').trim();
@@ -26,12 +18,8 @@ export function normalizeKanbanSettings(value = {}) {
   const settings = { ...DEFAULT_SETTINGS, ...(value ?? {}) };
   return {
     enabled: Boolean(settings.enabled),
-    baseUrl: normalizeKanbanUrl(settings.baseUrl),
+    baseUrl: KANBAN_BASE_URL,
     token: String(settings.token ?? '').trim(),
-    workspaceId: String(settings.workspaceId ?? '').trim(),
-    boardId: String(settings.boardId ?? '').trim(),
-    columnId: String(settings.columnId ?? '').trim(),
-    limit: clampLimit(settings.limit),
   };
 }
 

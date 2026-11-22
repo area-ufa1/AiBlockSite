@@ -8,6 +8,7 @@ function text(value, max) {
 
 export function normalizeKanbanContext(payload) {
   if (!payload || typeof payload !== 'object') return null;
+  const workspaceId = Number(payload.workspace_id ?? payload.workspaceId);
   const board = payload.board && {
     id: payload.board.id,
     title: text(payload.board.title, MAX_TITLE),
@@ -16,7 +17,7 @@ export function normalizeKanbanContext(payload) {
     id: payload.column.id,
     title: text(payload.column.title, MAX_TITLE),
   };
-  if (!board || !column || !Array.isArray(payload.cards)) return null;
+  if (!Number.isInteger(workspaceId) || workspaceId < 1 || !board || !column || !Array.isArray(payload.cards)) return null;
   const cards = payload.cards.slice(0, MAX_CARDS).map((card) => ({
     id: card?.id,
     title: text(card?.title, MAX_TITLE),
@@ -26,7 +27,7 @@ export function normalizeKanbanContext(payload) {
     columnId: card?.column_id,
     version: card?.version,
   })).filter((card) => card.id !== undefined && card.title);
-  return { board, column, cards };
+  return { workspaceId, board, column, cards };
 }
 
 export function kanbanContextForPrompt(context) {

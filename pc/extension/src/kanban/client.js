@@ -1,4 +1,5 @@
 import { normalizeKanbanSettings } from './storage.js';
+import { normalizeKanbanContext } from './context.js';
 
 function makeUrl(baseUrl, path, params = {}) {
   const url = new URL(path, `${baseUrl}/`);
@@ -31,14 +32,10 @@ async function parseResponse(response) {
 
 export async function fetchKanbanContext(settings, fetchImpl = fetch) {
   const normalized = normalizeKanbanSettings(settings);
-  if (!normalized.baseUrl || !normalized.token || !normalized.boardId || !normalized.columnId) {
-    throw new Error('Fill in the Kanban URL, token, board ID and column ID');
+  if (!normalized.token) {
+    throw new Error('Введите Kanban токен');
   }
-  const url = makeUrl(normalized.baseUrl, '/api/integrations/tabguard/context', {
-    board_id: normalized.boardId,
-    column_id: normalized.columnId,
-    limit: normalized.limit,
-  });
+  const url = makeUrl(normalized.baseUrl, '/api/integrations/tabguard/context');
   const response = await fetchWithTimeout(fetchImpl, url, {
     headers: { Authorization: `TabGuard ${normalized.token}` },
     credentials: 'omit',
@@ -48,10 +45,10 @@ export async function fetchKanbanContext(settings, fetchImpl = fetch) {
 
 export async function createKanbanFocusSession(settings, action, fetchImpl = fetch) {
   const normalized = normalizeKanbanSettings(settings);
-  if (!normalized.baseUrl || !normalized.token || !normalized.workspaceId || !normalized.boardId || !normalized.columnId) {
-    throw new Error('Fill in the Kanban URL, token, workspace ID, board ID and column ID');
-  }
-  const ids = ['workspaceId', 'boardId', 'columnId'].map((field) => Number(normalized[field]));
+  if (!normalized.token) throw new Error('Введите Kanban токен');
+  const context = normalizeKanbanContext(await fetchKanbanContext(normalized, fetchImpl));
+  if (!context) throw new Error('Kanban вернул неполный контекст');
+  const ids = [context.workspaceId, context.board.id, context.column.id].map(Number);
   if (ids.some((value) => !Number.isInteger(value) || value < 1)) throw new Error('Kanban IDs must be positive integers');
   const title = String(action?.title ?? '').trim().slice(0, 255);
   const description = String(action?.description ?? '').trim().slice(0, 4000);

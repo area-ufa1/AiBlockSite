@@ -86,12 +86,7 @@ function updateSave() {
 function readKanbanForm() {
   return {
     enabled: $('kanban-enabled').checked,
-    baseUrl: $('kanban-url').value,
     token: $('kanban-token').value,
-    workspaceId: $('kanban-workspace').value,
-    boardId: $('kanban-board').value,
-    columnId: $('kanban-column').value,
-    limit: $('kanban-limit').value,
   };
 }
 
@@ -104,20 +99,9 @@ function setKanbanStatus(message, error = false) {
 async function loadKanbanSettings() {
   const settings = await kanbanStorage.get();
   $('kanban-enabled').checked = settings.enabled;
-  $('kanban-url').value = settings.baseUrl;
   $('kanban-token').value = settings.token;
-  $('kanban-workspace').value = settings.workspaceId;
-  $('kanban-board').value = settings.boardId;
-  $('kanban-column').value = settings.columnId;
-  $('kanban-limit').value = settings.limit;
 }
 
-async function requestKanbanPermission(baseUrl) {
-  const origin = new URL(baseUrl).origin;
-  if (!chrome.permissions?.request) return;
-  const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
-  if (!granted) throw new Error('Доступ к адресу Kanban не разрешён');
-}
 
 async function saveKanbanSettings() {
   try {
@@ -130,16 +114,16 @@ async function saveKanbanSettings() {
   }
 }
 
-$('kanban-save').addEventListener('click', () => saveKanbanSettings());
+$('kanban-enabled').addEventListener('change', () => saveKanbanSettings());
+$('kanban-token').addEventListener('change', () => saveKanbanSettings());
 $('kanban-test').addEventListener('click', async () => {
   const button = $('kanban-test');
   button.disabled = true;
   try {
     const settings = await saveKanbanSettings();
     if (!settings) return;
-    await requestKanbanPermission(settings.baseUrl);
     const context = await fetchKanbanContext(settings);
-    setKanbanStatus(`Связь работает. Получено карточек: ${context.cards?.length ?? 0}.`);
+    setKanbanStatus(`\u0421\u0432\u044f\u0437\u044c \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442. \u0414\u043e\0441\u043a\u0430: ${context.board.title}.`);
   } catch (error) {
     setKanbanStatus(error.message, true);
   } finally {
