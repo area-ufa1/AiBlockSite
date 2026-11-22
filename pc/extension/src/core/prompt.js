@@ -34,3 +34,7 @@ export function buildSupportPrompt(tab, categoryName, kind = 'adult', options = 
 export function chatgptUrl(prompt) {
   return `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
 }
+
+export function chatgptHandoffUrl(nonce) {
+  return `https://chatgpt.com/?tabguard_handoff=${encodeURIComponent(nonce)}`;
+}

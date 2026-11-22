@@ -5,9 +5,11 @@ import { safeSearchUrl } from './core/safesearch.js';
 import { BlockCooldown } from './core/cooldown.js';
 import { createStore } from './store.js';
 import { createBundledLoader } from './bundled.js';
+import { chatgptHandoffUrl, chatgptUrl } from './core/prompt.js';
 import { createKanbanStorage } from './kanban/storage.js';
 import { fetchKanbanContext } from './kanban/client.js';
 import { kanbanContextForPrompt } from './kanban/context.js';
+import { createHandoffStore } from './handoff.js';
 
 const store = createStore(chrome.storage.local);
 const bundled = createBundledLoader((name) =>
@@ -18,6 +20,7 @@ const bundled = createBundledLoader((name) =>
   }));
 const cooldown = new BlockCooldown();
 const kanbanStorage = createKanbanStorage(chrome.storage.local);
+const handoffs = createHandoffStore(chrome.storage.session);
 
 function bundledNames(categories) {
   return [...new Set(categories.filter((c) => c.enabled && c.bundledList).map((c) => c.bundledList))];
@@ -54,6 +57,8 @@ async function check(tabId, url, title, genre = null) {
       if (safe) await chrome.tabs.update(tabId, { url: safe });
       return;
     }
+    const handoff = await prepareHandoff(verdict.prompt, { tabId, sourceUrl: url, title });
+    verdict = { ...verdict, redirectUrl: handoff.url };
     if (!cooldown.shouldBlock(tabId, url)) {
       // Blocked a moment ago. If the tab is already heading to ChatGPT this is the second trigger
       // of one visit; otherwise the user came straight back (Back, same link) — send it again, uncounted.
@@ -71,6 +76,16 @@ async function check(tabId, url, title, genre = null) {
     await Promise.allSettled([copyToClipboard(verdict.prompt), store.incrementStat(verdict.categoryId)]);
   } catch (e) {
     console.error('Страж вкладок:', e);
+  }
+}
+
+async function prepareHandoff(prompt, metadata) {
+  try {
+    const record = await handoffs.create(prompt, metadata);
+    return { url: chatgptHandoffUrl(record.nonce), nonce: record.nonce };
+  } catch {
+    // The query-string URL keeps the existing clipboard fallback usable on older Chrome builds.
+    return { url: chatgptUrl(prompt), nonce: null };
   }
 }
 
@@ -122,10 +137,31 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 // The YouTube content script reports the category of the video the tab is showing.
-chrome.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === 'youtube-genre' && sender.tab?.id !== undefined) {
     check(sender.tab.id, sender.tab.url, sender.tab.title ?? null, String(message.genre));
+    return false;
   }
+  if (message?.type === 'tabguard-get-handoff' && sender.tab?.id !== undefined) {
+    (async () => {
+      const record = await handoffs.get(message.nonce, sender.tab.id);
+      if (!record) {
+        sendResponse({ ok: false });
+        return;
+      }
+      await handoffs.update(message.nonce, { status: 'opened' });
+      sendResponse({ ok: true, prompt: record.prompt, sourceUrl: record.sourceUrl, title: record.title });
+    })().catch(() => sendResponse({ ok: false }));
+    return true;
+  }
+  if (message?.type === 'tabguard-handoff-status' && sender.tab?.id !== undefined) {
+    const allowed = new Set(['opened', 'filled', 'sent', 'fallback', 'failed']);
+    if (allowed.has(message.status)) {
+      handoffs.update(message.nonce, { status: message.status }).catch(() => {});
+    }
+    return false;
+  }
+  return false;
 });
 
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
