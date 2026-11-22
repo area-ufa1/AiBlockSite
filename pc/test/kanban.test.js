@@ -22,6 +22,7 @@ test('normalizes Kanban settings and rejects non-http URLs', () => {
     enabled: false,
     baseUrl: 'https://kanban.example',
     token: '',
+    workspaceId: '',
     boardId: '',
     columnId: '',
     limit: 10,
@@ -30,11 +31,12 @@ test('normalizes Kanban settings and rejects non-http URLs', () => {
 
 test('stores Kanban settings in one local storage record', async () => {
   const storage = createKanbanStorage(memoryArea());
-  await storage.save({ enabled: true, baseUrl: 'http://localhost:8000', token: 'tg_secret', boardId: 'b1', columnId: 'c1', limit: 3 });
+  await storage.save({ enabled: true, baseUrl: 'http://localhost:8000', token: 'tg_secret', workspaceId: 'w1', boardId: 'b1', columnId: 'c1', limit: 3 });
   assert.deepEqual(await storage.get(), {
     enabled: true,
     baseUrl: 'http://localhost:8000',
     token: 'tg_secret',
+    workspaceId: 'w1',
     boardId: 'b1',
     columnId: 'c1',
     limit: 3,
@@ -59,6 +61,19 @@ test('surfaces API error code without including the token', async () => {
     fetchKanbanContext({ baseUrl: 'http://localhost:8000', token: 'tg_secret', boardId: 'b1', columnId: 'c1' }, async () => new Response(JSON.stringify({ code: 'TOKEN_REVOKED', detail: 'revoked' }), { status: 401 })),
     (error) => error.status === 401 && error.code === 'TOKEN_REVOKED' && !error.message.includes('tg_secret'),
   );
+});
+
+test('creates a Kanban focus session with the integration token', async () => {
+  let request;
+  const { createKanbanFocusSession } = await import('../extension/src/kanban/client.js');
+  const response = await createKanbanFocusSession({ baseUrl: 'http://localhost:8000', token: 'tg_secret', workspaceId: '4', boardId: '5', columnId: '6' }, { title: 'Read one page', description: 'Start with the first paragraph', sourceUrl: 'https://chatgpt.com/' }, async (url, init) => {
+    request = { url: String(url), init };
+    return new Response(JSON.stringify({ action: 'created', card_id: 12 }), { status: 200, headers: { 'content-type': 'application/json' } });
+  });
+  assert.equal(response.card_id, 12);
+  assert.equal(request.init.headers.Authorization, 'TabGuard tg_secret');
+  assert.equal(JSON.parse(request.init.body).workspace_id, 4);
+  assert.equal(JSON.parse(request.init.body).source, 'tabguard_chatgpt');
 });
 
 test('normalizes context to bounded prompt-safe fields', () => {

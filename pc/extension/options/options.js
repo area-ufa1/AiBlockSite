@@ -88,6 +88,7 @@ function readKanbanForm() {
     enabled: $('kanban-enabled').checked,
     baseUrl: $('kanban-url').value,
     token: $('kanban-token').value,
+    workspaceId: $('kanban-workspace').value,
     boardId: $('kanban-board').value,
     columnId: $('kanban-column').value,
     limit: $('kanban-limit').value,
@@ -105,6 +106,7 @@ async function loadKanbanSettings() {
   $('kanban-enabled').checked = settings.enabled;
   $('kanban-url').value = settings.baseUrl;
   $('kanban-token').value = settings.token;
+  $('kanban-workspace').value = settings.workspaceId;
   $('kanban-board').value = settings.boardId;
   $('kanban-column').value = settings.columnId;
   $('kanban-limit').value = settings.limit;

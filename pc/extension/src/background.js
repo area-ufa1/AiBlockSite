@@ -8,6 +8,7 @@ import { createBundledLoader } from './bundled.js';
 import { chatgptHandoffUrl, chatgptUrl } from './core/prompt.js';
 import { createKanbanStorage } from './kanban/storage.js';
 import { fetchKanbanContext } from './kanban/client.js';
+import { createKanbanFocusSession } from './kanban/client.js';
 import { kanbanContextForPrompt } from './kanban/context.js';
 import { createHandoffStore } from './handoff.js';
 
@@ -160,6 +161,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handoffs.update(message.nonce, { status: message.status }).catch(() => {});
     }
     return false;
+  }
+  if (message?.type === 'tabguard-create-card' && sender.tab?.id !== undefined) {
+    (async () => {
+      const settings = await kanbanStorage.get();
+      if (!settings.enabled) throw new Error('Kanban integration is disabled');
+      const result = await createKanbanFocusSession(settings, {
+        title: message.action?.title,
+        description: message.action?.description,
+        sourceUrl: message.sourceUrl,
+      });
+      sendResponse({ ok: true, cardId: result.card_id ?? result.cardId ?? null });
+    })().catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
   }
   return false;
 });
