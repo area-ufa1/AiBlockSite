@@ -1,4 +1,4 @@
-// Service worker: watches navigations and titles, sends matching tabs to Claude.
+// Service worker: watches navigations and titles, sends matching tabs to ChatGPT.
 import { decide } from './core/decide.js';
 import { isAllowlisted } from './core/matcher.js';
 import { safeSearchUrl } from './core/safesearch.js';
@@ -43,7 +43,7 @@ async function check(tabId, url, title, genre = null) {
       return;
     }
     if (!cooldown.shouldBlock(tabId, url)) {
-      // Blocked a moment ago. If the tab is already heading to Claude this is the second trigger
+      // Blocked a moment ago. If the tab is already heading to ChatGPT this is the second trigger
       // of one visit; otherwise the user came straight back (Back, same link) — send it again, uncounted.
       const tab = await chrome.tabs.get(tabId);
       if (!isAllowlisted(tab.pendingUrl || tab.url)) await chrome.tabs.update(tabId, { url: verdict.redirectUrl });
@@ -64,7 +64,7 @@ async function check(tabId, url, title, genre = null) {
 
 /**
  * Chrome occasionally drops a redirect issued while the original navigation is still starting
- * (the tab ends up blank). Check once shortly after and redirect again if the tab is not on Claude.
+ * (the tab ends up blank). Check once shortly after and redirect again if the tab is not on ChatGPT.
  */
 function ensureRedirected(tabId, redirectUrl) {
   setTimeout(async () => {
@@ -82,7 +82,7 @@ async function copyToClipboard(text) {
     await chrome.offscreen.createDocument({
       url: 'src/offscreen.html',
       reasons: ['CLIPBOARD'],
-      justification: 'Copy the supportive prompt so it can be pasted into Claude',
+      justification: 'Copy the supportive prompt so it can be pasted into ChatGPT',
     });
   }
   await chrome.runtime.sendMessage({ target: 'offscreen', type: 'copy', text });

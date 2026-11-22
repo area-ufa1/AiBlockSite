@@ -1,6 +1,6 @@
 // Protection UI shared by the options page: status line, the unlock dialog (pause or partner PIN).
 import { remainingCountdownMs, startCountdown, cancelCountdown, tryPin, isUnlocked, phraseMatches } from '../src/core/lock.js';
-import { claudeUrl } from '../src/core/prompt.js';
+import { chatgptUrl } from '../src/core/prompt.js';
 
 const $ = (id) => document.getElementById(id);
 const WANT_TO_DISABLE_PROMPT =
@@ -47,7 +47,7 @@ export function createUnlockUi(store) {
     await renderStatus();
   }
 
-  $('talk').href = claudeUrl(WANT_TO_DISABLE_PROMPT);
+  $('talk').href = chatgptUrl(WANT_TO_DISABLE_PROMPT);
   $('weaken').addEventListener('click', show);
   // The phrase is typed, not pasted or dropped in.
   for (const type of ['paste', 'drop']) $('phrase').addEventListener(type, (e) => e.preventDefault());

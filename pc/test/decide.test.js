@@ -8,14 +8,14 @@ test('non-http urls are never blocked', () => {
     assert.equal(decide({ url, title: 'porn' }, DEFAULT_CATEGORIES, new Map()), null);
 });
 
-test('allowlisted claude page is never blocked', () =>
-  assert.equal(decide({ url: 'https://claude.ai/new?q=porn', title: 'porn' }, DEFAULT_CATEGORIES, new Map()), null));
+test('allowlisted ChatGPT page is never blocked', () =>
+  assert.equal(decide({ url: 'https://chatgpt.com/?q=porn', title: 'porn' }, DEFAULT_CATEGORIES, new Map()), null));
 
-test('decide returns redirect to claude', () => {
+test('decide returns redirect to ChatGPT', () => {
   const d = decide({ url: 'https://x.com/porn', title: null }, DEFAULT_CATEGORIES, new Map());
   assert.equal(d.categoryId, 'porn');
   assert.equal(d.categoryName, 'Порно');
-  assert.ok(d.redirectUrl.startsWith('https://claude.ai/new?q='));
+  assert.ok(d.redirectUrl.startsWith('https://chatgpt.com/?q='));
   assert.ok(d.prompt.includes('«Порно»'));
 });
 
@@ -30,7 +30,7 @@ test('percent-encoded cyrillic search query is blocked before load', () => {
   assert.equal(decide({ url: yandex, title: null }, DEFAULT_CATEGORIES, new Map())?.categoryId, 'porn');
 });
 
-test('prompt shows the decoded address to Claude', () => {
+test('prompt shows the decoded address to ChatGPT', () => {
   const url = new URL('https://www.google.com/search?q=порно').href;
   const d = decide({ url, title: null }, DEFAULT_CATEGORIES, new Map());
   assert.ok(d.prompt.includes('q=порно'), d.prompt);

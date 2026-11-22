@@ -28,7 +28,7 @@ test('existing categories are not reseeded', async () => {
   const mine = { id: 'a', name: 'Моя', enabled: true, keywords: ['x'], domains: [], bundledList: null };
   const state = await createStore(fakeArea({ categories: [mine], stats: { a: 3 } })).getState();
   assert.deepEqual(state.categories[0], mine);
-  assert.deepEqual(state.categories.map((c) => c.id), ['a', 'youtube-fun']); // deleted «Порно» is not re-added
+  assert.deepEqual(state.categories.map((c) => c.id), ['a', 'youtube-fun', 'games']); // deleted «Порно» is not re-added
   assert.deepEqual(state.stats, { a: 3 });
 });
 
@@ -63,15 +63,15 @@ test('deleteCategory removes its stats', async () => {
   await store.incrementStat('porn');
   await store.deleteCategory('porn');
   const state = await store.getState();
-  assert.deepEqual(state.categories.map((c) => c.id), ['youtube-fun']);
+  assert.deepEqual(state.categories.map((c) => c.id), ['youtube-fun', 'games']);
   assert.deepEqual(state.stats, {});
 });
 
-test('existing install gains youtube category disabled', async () => {
+test('existing install gains built-in categories', async () => {
   const mine = { id: 'porn', name: 'Порно', enabled: true, keywords: ['мое'], domains: [], bundledList: 'adult' };
   const area = fakeArea({ categories: [mine], stats: { porn: 5 } });
   const state = await createStore(area).getState();
-  assert.deepEqual(state.categories.map((c) => [c.id, c.enabled]), [['porn', true], ['youtube-fun', false]]);
+  assert.deepEqual(state.categories.map((c) => [c.id, c.enabled]), [['porn', true], ['youtube-fun', false], ['games', true]]);
   assert.deepEqual(state.categories[0].keywords, ['мое']);
   assert.deepEqual(state.stats, { porn: 5 });
 });
@@ -80,7 +80,7 @@ test('a deleted built-in category is not added back', async () => {
   const store = createStore(fakeArea());
   await store.getState();
   await store.deleteCategory('youtube-fun');
-  assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['porn']);
+  assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['porn', 'games']);
 });
 
 import { setPauseMode, initialLockState, startCountdown, settle } from '../extension/src/core/lock.js';
@@ -125,7 +125,7 @@ test('deleting is allowed inside the window', async () => {
   const store = await lockedStore();
   await store.saveLock(settle(startCountdown(await store.getLock(), 0), 20 * 60_000));
   await store.deleteCategory('porn', 21 * 60_000);
-  assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['youtube-fun']);
+  assert.deepEqual((await store.getState()).categories.map((c) => c.id), ['youtube-fun', 'games']);
 });
 
 test('saveCategory sets url prefixes and only-hosts when given', async () => {

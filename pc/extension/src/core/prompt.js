@@ -1,23 +1,29 @@
-// Supportive prompt opened on claude.ai after a block; text matches the Android app (SupportPrompt.kt).
+// Prompt opened in ChatGPT after a block. The prompt is also copied to the clipboard.
 
 const MAX_PAGE = 200;
 
 /** @param {'adult'|'youtube'} kind which supportive text to use */
 export function buildSupportPrompt(tab, categoryName, kind = 'adult') {
-  const title = tab.title?.trim();
-  const page = (title || tab.url || '').trim().slice(0, MAX_PAGE);
+  const title = (tab.title || '').trim().slice(0, MAX_PAGE);
+  const url = (tab.url || '').trim().slice(0, MAX_PAGE);
   if (kind === 'youtube') {
-    return `Я только что чуть не залип в развлекательный YouTube: «${page}».\n` +
-      'Я поставил себе приложение, чтобы не тратить время на бесконечную ленту. Пожалуйста, мягко и без осуждения ' +
-      'помоги вернуться к делу и справиться с тягой к бесконечной ленте прямо сейчас: ' +
-      'предложи пару конкретных действий на ближайшие 10 минут.';
+    return [
+      'Я только что открыл развлекательное видео на YouTube и хочу не залипнуть в бесконечной ленте.',
+      `Название видео: «${title || 'неизвестно'}»`,
+      `Ссылка: ${url || 'неизвестно'}`,
+      '',
+      'Проанализируй этот ролик по доступной странице и помоги принять осознанное решение.',
+      'Ответь в формате:',
+      '1. О чём видео и какую пользу или развлечение оно даёт.',
+      '2. Стоит ли смотреть его сейчас с учётом моей цели не отвлекаться.',
+      '3. Если смотреть не стоит, предложи короткое действие на ближайшие 10 минут.',
+      'Если ссылку нельзя открыть, честно скажи об этом и опирайся только на название.',
+    ].join('\n');
   }
-  return `Я только что чуть не открыл страницу из категории «${categoryName}»: «${page}».\n` +
-    'Я поставил себе приложение, чтобы не заходить на такие сайты. Пожалуйста, мягко и без осуждения ' +
-    'отговори меня возвращаться туда, поддержи и помоги справиться с тягой прямо сейчас: ' +
-    'предложи пару конкретных действий на ближайшие 10 минут.';
+  return `Я только что чуть не открыл страницу из категории «${categoryName}»: «${title || url}».\n` +
+    'Я поставил себе приложение, чтобы не заходить на такие сайты. Пожалуйста, мягко и без осуждения помоги вернуться к делу прямо сейчас и предложи пару конкретных действий на ближайшие 10 минут.';
 }
 
-export function claudeUrl(prompt) {
-  return `https://claude.ai/new?q=${encodeURIComponent(prompt)}`;
+export function chatgptUrl(prompt) {
+  return `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
 }

@@ -22,6 +22,16 @@ export const DEFAULT_CATEGORIES = Object.freeze([
     urlPrefixes: ['youtube.com/shorts/'],
     onlyHosts: ['youtube.com', 'youtu.be'],
   }),
+  Object.freeze({
+    id: 'games',
+    name: 'Игры',
+    enabled: true,
+    keywords: [],
+    domains: [],
+    bundledList: 'games',
+    urlPrefixes: [],
+    onlyHosts: [],
+  }),
 ]);
 
 /** Keywords typed by the user: one per line or comma-separated; normalized, no blanks, no duplicates. */
